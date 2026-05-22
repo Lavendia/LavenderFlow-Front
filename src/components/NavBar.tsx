@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { COLORS } from "../constants/colors"
 import { Link } from "react-router-dom"
+import LogoDark from "../assets/logo-dark.webp"
 
 export function NavBar() {
   const [scrolled, setScrolled] = useState(false)
@@ -31,7 +32,7 @@ export function NavBar() {
     >
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <img
-          src="/Lavendia.png"
+          src={LogoDark}
           alt=""
           style={{
             width: 50,

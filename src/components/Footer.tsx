@@ -1,4 +1,5 @@
 import { COLORS } from "../constants/colors"
+import LogoDark from "../assets/logo-dark.webp"
 
 export function Footer() {
   return (
@@ -17,7 +18,7 @@ export function Footer() {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img
-              src="/Lavendia.png"
+              src={LogoDark}
               alt=""
               style={{
                 width: 40,

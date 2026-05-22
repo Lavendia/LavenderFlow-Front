@@ -1,5 +1,6 @@
 import { COLORS } from "../constants/colors"
 import { Link } from "react-router-dom"
+import LogoDark from "../assets/logo-dark.webp"
 
 export function CTASection() {
   return (
@@ -20,7 +21,7 @@ export function CTASection() {
         <div style={{ position: "relative", zIndex: 1 }}>
           <div aria-hidden="true" style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
             <img
-              src="/Lavendia.png"
+              src={LogoDark}
               alt=""
               style={{
                 width: 120,
