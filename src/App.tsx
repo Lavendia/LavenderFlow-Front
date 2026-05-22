@@ -1,13 +1,15 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LoginPage from './pages/LoginPage'
-import { HomePage } from './pages/HomePage'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import AuthLayout from './pages/AuthLayout'
+import { HomePage } from "./pages/HomePage"
+import { AnimatePresence } from 'framer-motion'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<AuthLayout />} />
+        <Route path="/register" element={<AuthLayout />} />
       </Routes>
     </BrowserRouter>
   )
