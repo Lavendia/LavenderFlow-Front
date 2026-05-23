@@ -1,7 +1,7 @@
 export const APIRole = {
     board: {
-        async getBoardRoles(boardId: string) {
-            const response = await fetch(`/api/boards/${boardId}/roles`, {
+        async getBoardRoles() {
+            const response = await fetch(`/api/boardroles`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -15,7 +15,7 @@ export const APIRole = {
             return await response.json()
         },
         async createBoardRole(role: string) {
-            const response = await fetch(`/api/boards/roles`, {
+            const response = await fetch(`/api/boardroles`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -31,8 +31,8 @@ export const APIRole = {
         }
     },
     workspace: {
-        async getWorkspaceRoles(workspaceId: string) {
-            const response = await fetch(`/api/workspaces/${workspaceId}/roles`, {
+        async getWorkspaceRoles() {
+            const response = await fetch(`/api/workspaceroles`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export const APIRole = {
             return await response.json()
         },
         async createWorkspaceRole(role: string) {
-            const response = await fetch(`/api/workspaces/roles`, {
+            const response = await fetch(`/api/workspaceroles`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
