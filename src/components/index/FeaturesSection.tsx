@@ -1,5 +1,5 @@
-import { COLORS } from "../constants/colors"
-import { features } from "../constants/features"
+import { COLORS } from "../../constants/colors"
+import { features } from "../../constants/features"
 
 export function FeaturesSection() {
   return (
@@ -48,7 +48,7 @@ export function FeaturesSection() {
               padding: "28px 24px",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: "1rem" }} aria-hidden="true">{f.icon}</div>
+            <f.icon/>
             <h3
               style={{
                 fontFamily: "'DM Serif Display', serif",

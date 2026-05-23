@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { COLORS } from "../constants/colors"
+import { COLORS } from "../../constants/colors"
 import { BoardMockup } from "./BoardMockup"
 import { Link } from "react-router-dom"
 

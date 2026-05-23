@@ -1,4 +1,4 @@
-import { COLORS } from "../constants/colors"
+import { COLORS } from "../../constants/colors"
 
 const cols = [
   { title: "To do", color: COLORS.mauve, cards: ["Homepage redesign", "Q3 client brief", "Unit tests"] },

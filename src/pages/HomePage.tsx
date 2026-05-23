@@ -1,9 +1,9 @@
 import { COLORS } from "../constants/colors"
 import { NavBar } from "../components/NavBar"
-import { HeroSection } from "../components/HeroSection"
-import { FeaturesSection } from "../components/FeaturesSection"
-import { CTASection } from "../components/CTASection"
-import { Footer } from "../components/Footer"
+import { HeroSection } from "../components/index/HeroSection"
+import { FeaturesSection } from "../components/index/FeaturesSection"
+import { CTASection } from "../components/index/CTASection"
+import { Footer } from "../components/index/Footer"
 
 export function HomePage() {
   return (

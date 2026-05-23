@@ -1,6 +1,6 @@
-import { COLORS } from "../constants/colors"
+import { COLORS } from "../../constants/colors"
 import { Link } from "react-router-dom"
-import LogoDark from "../assets/logo-dark.webp"
+import LogoDark from "../../assets/logo-dark.webp"
 
 export function CTASection() {
   return (

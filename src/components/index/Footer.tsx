@@ -1,5 +1,5 @@
-import { COLORS } from "../constants/colors"
-import LogoDark from "../assets/logo-dark.webp"
+import { COLORS } from "../../constants/colors"
+import LogoDark from "../../assets/logo-dark.webp"
 
 export function Footer() {
   return (
