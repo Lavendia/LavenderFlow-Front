@@ -41,7 +41,7 @@ export const APIUser = {
         }
         return await response.json()
     },
-    async updateProfile(userId: string, data: { username?: string, email?: string, password?: string }) {
+    async updateProfile(userId: string, data: { name?: string, email?: string, password?: string }) {
         const response = await fetch(`/api/users/${userId}`, {
             method: "PUT",
             headers: {

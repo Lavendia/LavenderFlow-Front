@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { COLORS } from "../../constants/colors"
 import { BoardMockup } from "./BoardMockup"
-import { Link } from "react-router-dom"
 
 export function HeroSection() {
   const [visible, setVisible] = useState(false)
@@ -14,38 +14,18 @@ export function HeroSection() {
   return (
     <section
       aria-labelledby="hero-heading"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        padding: "120px clamp(1.5rem, 5vw, 4rem) 80px",
-        position: "relative",
-        overflow: "hidden",
-      }}
+      className="relative min-h-screen flex flex-col items-center justify-center text-center overflow-hidden px-[clamp(1.5rem,5vw,4rem)] pt-[120px] pb-20"
     >
+
       <div
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(24px)",
-          transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-          maxWidth: 760,
-          position: "relative",
-          zIndex: 1,
-        }}
+        className={`relative z-10 max-w-[760px] transition-all duration-700 ease-out ${
+          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
       >
         <h1
           id="hero-heading"
-          style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: "clamp(2.8rem, 8vw, 5.5rem)",
-            lineHeight: 1.05,
-            color: "#fff",
-            margin: "0 0 1.5rem",
-            letterSpacing: "-0.03em",
-          }}
+          className="text-white leading-[1.05] tracking-tight mb-6"
+          style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2.8rem, 8vw, 5.5rem)" }}
         >
           Your team's flow,
           <br />
@@ -62,46 +42,22 @@ export function HeroSection() {
         </h1>
 
         <p
-          style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-            color: "rgba(239,187,255,0.7)",
-            lineHeight: 1.7,
-            marginBottom: "2.5rem",
-            maxWidth: 560,
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
+          className="text-[#EFBBFF]/70 leading-[1.7] mb-10 mx-auto max-w-[560px]"
+          style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}
         >
           LavenderFlow is the collaborative dashboard built for modern teams. Organize, prioritize, deliver — without friction, with style.
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <div className="flex gap-3 justify-center flex-wrap">
           <Link
             to="/register"
-            style={{
-              background: COLORS.hyperMagenta,
-              color: "#fff",
-              padding: "14px 32px",
-              borderRadius: 12,
-              fontSize: "1rem",
-              fontWeight: 600,
-              textDecoration: "none",
-              letterSpacing: "-0.01em",
-            }}
+            className="bg-[#BE29EC] text-white px-8 py-3.5 rounded-xl text-base font-semibold no-underline tracking-tight hover:opacity-90 transition-opacity"
           >
             Create a workspace
           </Link>
           <a
             href="#features"
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              color: COLORS.mauveLight,
-              padding: "14px 32px",
-              borderRadius: 12,
-              fontSize: "1rem",
-              textDecoration: "none",
-              border: "1px solid rgba(216,150,255,0.2)",
-            }}
+            className="bg-white/6 text-[#EFBBFF] px-8 py-3.5 rounded-xl text-base no-underline border border-[#D896FF]/20 hover:bg-white/10 transition-colors"
           >
             See features →
           </a>
@@ -110,45 +66,16 @@ export function HeroSection() {
 
       <div
         aria-hidden="true"
-        style={{
-          marginTop: "5rem",
-          width: "100%",
-          maxWidth: 900,
-          position: "relative",
-          zIndex: 1,
-          opacity: visible ? 1 : 0,
-          transform: visible
-            ? "translateY(0) perspective(1200px) rotateX(0deg)"
-            : "translateY(40px) perspective(1200px) rotateX(6deg)",
-          transition: "all 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s",
-        }}
+        className={`relative z-10 mt-20 w-full max-w-225 transition-all duration-1200 ease-out delay-300 ${
+          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        }`}
       >
-        <div
-          style={{
-            background: COLORS.darkCard,
-            border: `1px solid ${COLORS.darkCardBorder}`,
-            borderRadius: 20,
-            padding: "24px",
-            boxShadow: "0 0 80px rgba(190,41,236,0.15)",
-          }}
-        >
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <div className="bg-[#2d1052] border border-[#3d1a6e] rounded-2xl p-6 shadow-[0_0_80px_rgba(190,41,236,0.15)]">
+          <div className="flex gap-2 mb-5">
             {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
-              <div key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c }} />
+              <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
             ))}
-            <div
-              style={{
-                flex: 1,
-                background: "rgba(255,255,255,0.06)",
-                borderRadius: 6,
-                height: 20,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                color: "rgba(255,255,255,0.3)",
-              }}
-            >
+            <div className="flex-1 bg-white/[0.06] rounded h-5 flex items-center justify-center text-[11px] text-white/30">
               app.lavenderflow.io/workspace
             </div>
           </div>

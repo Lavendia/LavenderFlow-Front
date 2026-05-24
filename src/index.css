@@ -128,3 +128,8 @@
     @apply font-sans;
     }
 }
+
+
+html { scroll-behavior: smooth; scrollbar-width: none;}
+body { background: #1a0a2e; font-family: 'Syne', sans-serif; color: #fff; overflow-x: hidden; }
+:focus-visible { outline: 2px solid #BE29EC; outline-offset: 3px; border-radius: 4px; }

@@ -19,7 +19,7 @@ export default function LoginForm() {
         throw new Error('No token received')
       }
       window.localStorage.setItem('authToken', response.token)
-      navigate('/dashboard')
+      navigate('/profile')
     } catch (err) {
       setError('Invalid email or password')
     } finally {

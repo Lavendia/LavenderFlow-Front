@@ -1,65 +1,47 @@
-import { COLORS } from "../../constants/colors"
 import { Link } from "react-router-dom"
+import { COLORS } from "../../constants/colors"
 import LogoDark from "../../assets/logo-dark.webp"
 
 export function CTASection() {
   return (
-    <section aria-labelledby="cta-heading" style={{ padding: "80px clamp(1.5rem, 5vw, 4rem) 120px" }}>
-      <div
-        style={{
-          maxWidth: 700,
-          margin: "0 auto",
-          textAlign: "center",
-          background: COLORS.darkCard,
-          border: `1px solid ${COLORS.darkCardBorder}`,
-          borderRadius: 24,
-          padding: "clamp(2.5rem, 6vw, 4rem)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div aria-hidden="true" style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
+    <section
+      aria-labelledby="cta-heading"
+      className="px-[clamp(1.5rem,5vw,4rem)] pt-20 pb-[120px]"
+    >
+      <div className="max-w-175 mx-auto text-center bg-[#2d1052] border border-[#3d1a6e] rounded-3xl p-[clamp(2.5rem,6vw,4rem)] relative overflow-hidden">
+
+        {/* Background glow */}
+        <div
+          aria-hidden="true"
+          className="absolute -top-1/2 -left-[10%] w-[300px] h-[300px] rounded-full blur-[80px] opacity-[0.12] pointer-events-none"
+          style={{ background: COLORS.hyperMagenta }}
+        />
+
+        <div className="relative z-10">
+          {/* Logo */}
+          <div aria-hidden="true" className="flex justify-center mb-4">
             <img
               src={LogoDark}
               alt=""
-              style={{
-                width: 120,
-                height: 120,
-                objectFit: "contain",
-                transform: "scale(2)", // zoom in to crop the whitespace visually
-              }}
+              className="w-[75px] h-[75px] object-contain scale-[2]"
             />
           </div>
+
           <h2
             id="cta-heading"
-            style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-              color: "#fff",
-              margin: "0 0 1rem",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.1,
-            }}
+            className="text-white tracking-tight leading-[1.1] mb-4"
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
           >
             Ready to transform your workflow?
           </h2>
-          <p style={{ fontSize: "1rem", color: "rgba(239,187,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>
+
+          <p className="text-base text-[#EFBBFF]/60 leading-relaxed mb-8">
             Join teams that have already adopted LavenderFlow. Get started in under 2 minutes.
           </p>
+
           <Link
             to="/register"
-            style={{
-              display: "inline-block",
-              background: COLORS.hyperMagenta,
-              color: "#fff",
-              padding: "15px 40px",
-              borderRadius: 12,
-              fontSize: "1rem",
-              fontWeight: 600,
-              textDecoration: "none",
-              letterSpacing: "-0.01em",
-            }}
+            className="inline-block bg-[#BE29EC] text-white px-10 py-4 rounded-xl text-base font-semibold no-underline tracking-tight hover:opacity-90 transition-opacity"
           >
             Create my workspace
           </Link>
