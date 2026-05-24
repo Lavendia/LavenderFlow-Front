@@ -41,6 +41,7 @@ export function CardDetailPopup({
     const inputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
+        setDraftName(card!.name)
         if (isOpen && card) {
             setDescription(card.description || "")
             fetchChecklists(card.id)
@@ -49,10 +50,10 @@ export function CardDetailPopup({
         }
     }, [isOpen, card])
 
-    const commitRename = () => {
+    const commitRename = async () => {
         const trimmed = draftName.trim()
         if (trimmed && trimmed !== card!.name) {
-            APICard.updateCard(card!.id.toString(), { name: trimmed })
+            await APICard.updateCard(card!.id.toString(), { name: trimmed })
             card!.name = trimmed
         } else {
             setDraftName(card!.name)
@@ -124,7 +125,7 @@ export function CardDetailPopup({
                         onChange={e => setDraftName(e.target.value)}
                         onBlur={commitRename}
                         onKeyDown={handleKeyDown}
-                        className="flex-1 bg-[#2d1052] text-white font-bold text-sm rounded px-2 py-0.5 outline outline-1 outline-[#D896FF] focus:outline-[#D896FF] mr-2"
+                        className="flex-1 bg-[#2d1052] text-white font-bold text-sm rounded px-2 py-0.5 outline-1 outline-[#D896FF] focus:outline-[#D896FF] mr-2"
                     />
                 ) : (
                     <h2
@@ -140,7 +141,7 @@ export function CardDetailPopup({
                     <label className="text-[#D896FF] font-semibold text-sm block mb-2">
                         Description
                     </label>
-                    {description && !editingDescription && (
+                    {description != undefined && !editingDescription && (
                         <>
                             <div className="bg-[#3d1a6e] border border-[#5a2c91] rounded px-3 py-2 text-white prose prose-invert max-w-none overflow-y-auto">
                                 <ReactMarkdown>
@@ -156,7 +157,7 @@ export function CardDetailPopup({
                         </>
                     )}
 
-                    {editingDescription && (
+                    {description == undefined || editingDescription && (
                         <>
                             <textarea
                                 value={description}

@@ -9,6 +9,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
     const [currentCard, setCurrentCard] = useState(card)
 
     useEffect(() => {
+        setCurrentCard(card)
         checkForChecklists()
     }, [card])
 
@@ -21,7 +22,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
         }
     }
 
-    const handleUpdateCard = (updatedCard: CardModel) => {
+    const handleUpdateCard = async (updatedCard: CardModel) => {
         setCurrentCard(updatedCard)
     }
 

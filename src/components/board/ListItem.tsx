@@ -36,7 +36,6 @@ export function List({
         const trimmed = draftName.trim()
         if (trimmed && trimmed !== list.name) {
             APIList.updateList(list.id.toString(), { name: trimmed })
-            list.name = trimmed
         } else {
             setDraftName(list.name)
         }
@@ -80,7 +79,7 @@ export function List({
                         onClick={() => setIsEditingName(true)}
                         title="Click to rename"
                     >
-                        {list.name}
+                        {draftName}
                     </h3>
                 )}
 

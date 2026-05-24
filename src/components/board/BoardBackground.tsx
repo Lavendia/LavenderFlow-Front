@@ -5,6 +5,8 @@ import type {BoardModel, CardModel, ListModel } from "@/src/models/BoardModels"
 import { useEffect, useState } from "react"
 import { List } from "./ListItem"
 import { PopupDialog } from "../PopupDialog"
+import { connection } from "@/src/api_utils/APISignalrUtils"
+import { HubConnectionState } from "@microsoft/signalr/dist/esm/HubConnection"
 
 export function BoardBackground() {
     const [ board, setBoard ] = useState<BoardModel | null>(null)
@@ -12,10 +14,11 @@ export function BoardBackground() {
     const [ cards, setCards ] = useState<CardModel[]>([])
     const [ popupOpen, setPopupOpen ] = useState(false)
 
+    const boardId = window.location.search.split("id=")[1];
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const boardId = window.location.search.split('id=')[1]
                 const boardResponse = await APIBoard.getBoardById(boardId)
                 setBoard({
                     id: boardResponse.id,
@@ -36,7 +39,82 @@ export function BoardBackground() {
                 console.error("Failed to load data:", error)
             }
         }
+
+        const connectBoardHub = async () => {
+            try {
+                if (connection.state !== HubConnectionState.Connected) {
+                    await connection.start();
+                }
+                await connection.invoke(
+                    "JoinBoard",
+                    Number(boardId)
+                );
+                console.log("Joined board",boardId );
+            }
+            catch(error)
+            {
+                console.error(error);
+            }
+        };
+
         fetchData()
+        connectBoardHub()
+
+        connection.on(
+            "CardCreated",
+            (card: CardModel) => {
+                setCards(prev => [
+                    ...prev,
+                    card
+                ]);
+            }
+        );
+
+        connection.on(
+            "CardUpdated",
+            (updatedCard: CardModel) => {
+
+                console.log(
+                    "RECEIVED UPDATE",
+                    updatedCard
+                );
+
+                setCards(prev =>
+                    prev.map(card =>
+                        card.id === updatedCard.id
+                            ? updatedCard
+                            : card
+                    )
+                );
+            }
+        );
+
+        connection.on(
+            "CardDeleted",
+            (cardId: number) => {
+                setCards(prev =>
+                    prev.filter(
+                        c => c.id !== cardId
+                    )
+                );
+            }
+        );
+
+        return () => {
+            connection.off(
+                "CardCreated"
+            );
+            connection.off(
+                "CardUpdated"
+            );
+            connection.off(
+                "CardDeleted"
+            );
+            connection.invoke(
+                "LeaveBoard",
+                Number(boardId)
+            );
+        };
     }, [])
 
     const handleAddCard = async (listId: number, name: string) => {

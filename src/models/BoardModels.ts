@@ -14,8 +14,8 @@ export interface CardModel {
     id: number
     name: string
     order: number
-    description: string | null
+    description: string | undefined
     archived: boolean
-    deadline?: Date | null
+    deadline?: Date | undefined
     listItemId: number
 }
