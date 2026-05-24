@@ -40,14 +40,14 @@ export const APICard = {
         })
         return await response.json()
     },
-    async updateCard(id: string, name: string, order: number, archived: boolean, listItemId: number, description: string, deadline?: string) {
+    async updateCard(id: string, data: { name?: string, order?: number, archived?: boolean, listItemId?: number, description?: string, deadline?: string }) {
         const response = await fetch(`/api/cards/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             },
-            body: JSON.stringify({ name, order, archived, description, deadline, listItemId })
+            body: JSON.stringify(data)
         })
         return await response.json()
     },
