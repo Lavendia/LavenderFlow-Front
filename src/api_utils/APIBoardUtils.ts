@@ -54,7 +54,7 @@ export const APIBoard = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
-        return await response.json()
+        return
     },
     async updateBoard(boardId: string, data: { name?: string, description?: string }) {
         const response = await fetch(`/api/boards/${boardId}`, {

@@ -29,7 +29,7 @@ export const APICard = {
         })
         return await response.json()
     },
-    async createCard(name: string, order: number, listItemId: number, description: string, deadline: string) {
+    async createCard(name: string, order: number, listItemId: number, description: string, deadline?: string) {
         const response = await fetch("/api/cards", {
             method: "POST",
             headers: {
@@ -59,6 +59,6 @@ export const APICard = {
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
-        return await response.json()
+        return
     }
 }

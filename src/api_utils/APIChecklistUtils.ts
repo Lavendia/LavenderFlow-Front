@@ -84,7 +84,7 @@ export const APIChecklist = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         }
     },
     checklistItems: {

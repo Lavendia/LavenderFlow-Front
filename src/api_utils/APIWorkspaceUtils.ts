@@ -54,7 +54,7 @@ export const APIWorkspace = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
-        return await response.json()
+        return
     },
     async updateWorkspace(id: string, data: { name?: string, description?: string, isPublic?: boolean }) {
         const response = await fetch(`/api/workspaces/${id}`, {

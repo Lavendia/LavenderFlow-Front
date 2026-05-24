@@ -68,6 +68,6 @@ export const APIUser = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
-        return await response.json()
+        return
     }
 }

@@ -83,6 +83,6 @@ export const APIList = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
-        return await response.json()
+        return
     }
 }

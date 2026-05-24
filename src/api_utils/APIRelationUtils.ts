@@ -55,7 +55,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         },
         async updateUserBoardRole(boardId: string, userId: string, boardRoleId: number) {
             const response = await fetch(`/api/boardusers?boardId=${boardId}&userId=${userId}`, {
@@ -115,7 +115,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         }
     },
     workspaces: {
@@ -188,7 +188,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         },
         async updateUserWorkspaceRole(workspaceUserId: string, workspaceRoleId: number) {
             const response = await fetch(`/api/workspaceusers/${workspaceUserId}`, {
