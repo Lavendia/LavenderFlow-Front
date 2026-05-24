@@ -119,6 +119,91 @@ export const APIRelation = {
         }
     },
     workspaces: {
-        // need api changes on workspaces to implement these
+        async getWorkspaceUser(workspaceUserId: string) {
+            const response = await fetch(`/api/workspaceusers/${workspaceUserId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getWorkspaceUsersByWorkspaceId(workspaceId: string) {
+            const response = await fetch(`/api/workspaceusers/workspaces/${workspaceId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getWorkspaceUsersByUserId(userId: string) {
+            const response = await fetch(`/api/workspaceusers/users/${userId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async addUserToWorkspace(workspaceId: number, userId: number, workspaceRoleId: number) {
+            const response = await fetch(`/api/workspaceusers`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                },
+                body: JSON.stringify({ workspaceId, userId, workspaceRoleId })
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async removeUserFromWorkspace(workspaceUserId: string) {
+            const response = await fetch(`/api/workspaceusers/${workspaceUserId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async updateUserWorkspaceRole(workspaceUserId: string, workspaceRoleId: number) {
+            const response = await fetch(`/api/workspaceusers/${workspaceUserId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                },
+                body: JSON.stringify({ workspaceRoleId })
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        }
     }
 }
