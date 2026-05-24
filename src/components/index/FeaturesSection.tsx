@@ -1,66 +1,44 @@
-import { COLORS } from "../../constants/colors"
 import { features } from "../../constants/features"
 
 export function FeaturesSection() {
   return (
-    <section id="features" aria-labelledby="features-heading" style={{ padding: "100px clamp(1.5rem, 5vw, 4rem)", position: "relative" }}>
-      <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-        <p
-          aria-hidden="true"
-          style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.1em", color: COLORS.mintLeaf, marginBottom: "1rem" }}
-        >
+    <section
+      id="features"
+      aria-labelledby="features-heading"
+      className="relative px-[clamp(1.5rem,5vw,4rem)] py-[100px]"
+    >
+      <div className="text-center mb-16">
+        <p aria-hidden="true" className="text-xs uppercase tracking-[0.1em] text-[#48CB9D] mb-4">
           Features
         </p>
         <h2
           id="features-heading"
-          style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: "clamp(2rem, 5vw, 3.5rem)",
-            color: "#fff",
-            margin: 0,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-          }}
+          className="text-white tracking-tight leading-[1.1] m-0"
+          style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
         >
           Everything you need,
           <br />
-          <span style={{ color: COLORS.mauve }}>nothing you don't.</span>
+          <span className="text-[#D896FF]">nothing you don't.</span>
         </h2>
       </div>
+
       <ul
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 20,
-          maxWidth: 1100,
-          margin: "0 auto",
-          listStyle: "none",
-          padding: 0,
-        }}
+        className="grid gap-5 max-w-[1100px] mx-auto list-none p-0"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
       >
         {features.map((f) => (
           <li
             key={f.title}
-            style={{
-              background: COLORS.darkCard,
-              border: `1px solid ${COLORS.darkCardBorder}`,
-              borderRadius: 16,
-              padding: "28px 24px",
-            }}
+            className="bg-[#2d1052] border border-[#3d1a6e] rounded-2xl p-7 hover:border-[#D896FF]/40 transition-colors"
           >
-            <f.icon/>
+            <f.icon />
             <h3
-              style={{
-                fontFamily: "'DM Serif Display', serif",
-                fontSize: "1.15rem",
-                color: "#fff",
-                margin: "0 0 8px",
-                letterSpacing: "-0.01em",
-              }}
+              className="text-white mb-2 tracking-tight"
+              style={{ fontFamily: "'DM Serif Display', serif", fontSize: "1.15rem" }}
             >
               {f.title}
             </h3>
-            <p style={{ fontSize: "0.875rem", color: "rgba(239,187,255,0.6)", lineHeight: 1.65, margin: 0 }}>{f.desc}</p>
+            <p className="text-sm text-[#EFBBFF]/60 leading-relaxed m-0">{f.desc}</p>
           </li>
         ))}
       </ul>

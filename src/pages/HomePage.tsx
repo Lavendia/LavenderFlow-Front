@@ -1,32 +1,24 @@
-import { COLORS } from "../constants/colors"
 import { NavBar } from "../components/NavBar"
 import { HeroSection } from "../components/index/HeroSection"
 import { FeaturesSection } from "../components/index/FeaturesSection"
 import { CTASection } from "../components/index/CTASection"
-import { Footer } from "../components/index/Footer"
+import { Footer } from "../components/Footer"
 
 export function HomePage() {
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body { background: ${COLORS.darkBg}; font-family: 'Syne', sans-serif; color: #fff; overflow-x: hidden; }
-        :focus-visible { outline: 2px solid ${COLORS.hyperMagenta}; outline-offset: 3px; border-radius: 4px; }
-        a:focus-visible { outline: 2px solid ${COLORS.hyperMagenta}; outline-offset: 3px; border-radius: 6px; }
+        @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(40px,30px); } }
+        @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-30px,-20px); } }
+        @keyframes drift3 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(20px,-40px); } }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-        @keyframes drift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, 30px); } }
-        @keyframes drift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-30px, -20px); } }
-        @keyframes drift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -40px); } }
-        @media (min-width: 640px) { .nav-link { display: inline !important; } }
       `}</style>
 
+      {/* Skip link */}
       <a
         href="#main-content"
-        style={{ position: "absolute", left: "-9999px", top: "auto", width: 1, height: 1, overflow: "hidden" }}
-        onFocus={(e) => Object.assign(e.currentTarget.style, { left: "1rem", top: "1rem", width: "auto", height: "auto", padding: "8px 16px", background: COLORS.hyperMagenta, color: "#fff", borderRadius: "8px", zIndex: "9999" })}
-        onBlur={(e) => Object.assign(e.currentTarget.style, { left: "-9999px", width: "1px", height: "1px" })}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-white focus:bg-[#BE29EC]"
       >
         Skip to main content
       </a>
