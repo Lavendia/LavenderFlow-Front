@@ -1,3 +1,4 @@
+import { APIAuth } from '@/src/api_utils/APIAuthUtils'
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
@@ -13,7 +14,11 @@ export default function LoginForm() {
     setError('')
     setLoading(true)
     try {
-      // wire to API later
+      var response = await APIAuth.login(email, password)
+      if (!response.token) {
+        throw new Error('No token received')
+      }
+      window.localStorage.setItem('authToken', response.token)
       navigate('/dashboard')
     } catch (err) {
       setError('Invalid email or password')
