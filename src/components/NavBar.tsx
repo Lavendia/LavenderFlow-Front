@@ -7,16 +7,18 @@ export function NavBar() {
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
-    setLoggedIn(!!localStorage.getItem("authToken"))
-    const handler = () => setScrolled(window.scrollY > 40)
-    window.addEventListener("scroll", handler)
-    return () => window.removeEventListener("scroll", handler)
-  }, [])
+    const token = localStorage.getItem("authToken")
+    setLoggedIn(!!token)
 
-  if (!loggedIn && (window.location.pathname !== "/login" && window.location.pathname !== "/register" && window.location.pathname !== "/")) {
-    //window.location.replace("/login")
-    //return null
-  }
+    if ( !token && !["/", "/login", "/register"].includes(window.location.pathname) ) {
+      window.location.replace("/login")
+      return
+    }
+
+    const handler = () => { setScrolled(window.scrollY > 40) }
+    window.addEventListener("scroll", handler)
+    return () => { window.removeEventListener("scroll", handler) }
+  }, [])
 
   return (
     <nav
@@ -28,7 +30,9 @@ export function NavBar() {
       }`}
     >
       <div className="flex items-center gap-2.5">
-        <img src={LogoDark} alt="" className="w-12 h-12 object-contain scale-[2]" />
+        <Link to="/">
+          <img src={LogoDark} alt="" className="w-12 h-12 object-contain scale-[2]" />
+        </Link>
         <span className="text-white text-xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>
           LavenderFlow
         </span>
@@ -41,13 +45,14 @@ export function NavBar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <a
-          href="#features"
-          className="hidden sm:inline text-[#EFBBFF] text-sm opacity-80 no-underline hover:opacity-100 transition-opacity"
-        >
-          Features
-        </a>
-
+        {window.location.pathname === "/" && (
+          <a
+            href="#features"
+            className="hidden sm:inline text-[#EFBBFF] text-sm opacity-80 no-underline hover:opacity-100 transition-opacity"
+          >
+            Features
+          </a>
+          )}
         {!loggedIn && (
           <>
             <Link
@@ -66,12 +71,22 @@ export function NavBar() {
         )}
 
         {loggedIn && (
-          <Link
-            to="/profile"
-            className="bg-[#BE29EC] text-white text-sm font-medium no-underline px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-          >
-            Profile
-          </Link>
+          <>
+            <Link to="/dashboard" className="text-[#EFBBFF] text-sm no-underline px-4 py-1.5 rounded-lg border border-[#3d1a6e] hover:border-[#D896FF] transition-colors">
+              Dashboards
+            </Link>
+            <Link
+              to="/profile"
+              className="bg-[#BE29EC] text-white text-sm font-medium no-underline px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Profile
+            </Link>
+            <a href="/login" onClick={() => { localStorage.removeItem("authToken"); setLoggedIn(false) }}
+              className="text-[#EFBBFF] text-sm no-underline px-4 py-1.5 rounded-lg border border-[#3d1a6e] hover:border-[#D896FF] transition-colors"
+            >
+              Sign out
+            </a>
+          </>
         )}
       </div>
     </nav>
