@@ -1,3 +1,4 @@
+import { APIAuth } from '@/src/api_utils/APIAuthUtils'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -19,7 +20,11 @@ export default function RegisterForm() {
     }
     setLoading(true)
     try {
-      // wire to API later
+      var response = await APIAuth.register(name, email, password)
+      if (!response.token) {
+        throw new Error('No token received')
+      }
+      window.localStorage.setItem('authToken', response.token)
       navigate('/dashboard')
     } catch (err) {
       setError('Something went wrong, please try again')
