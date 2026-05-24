@@ -14,13 +14,13 @@ export const APIAuth = {
         return data
     },
 
-    async register(username: string, email: string, password: string) {
+    async register(name: string, email: string, password: string) {
         const response = await fetch("/api/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify({ name, email, password })
         })
         const data = await response.json()
         if (response.status == 200) {
