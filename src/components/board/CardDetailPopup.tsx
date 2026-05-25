@@ -216,11 +216,9 @@ export function CardDetailPopup({
     const handleToggleLabel = async (labelId: number) => {
         try {
             if (assignedLabels.includes(labelId)) {
-                // Deselect current label
                 await APIRelation.labels.removeLabelFromCard(card!.id.toString(), labelId.toString())
                 setAssignedLabels([])
             } else {
-                // Remove any existing label first, then assign new one
                 for (const existingLabelId of assignedLabels) {
                     await APIRelation.labels.removeLabelFromCard(card!.id.toString(), existingLabelId.toString())
                 }

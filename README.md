@@ -1,73 +1,160 @@
-# React + TypeScript + Vite
+# LavenderFlow - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Un gestionnaire de tâches collaboratif moderne en temps réel, inspiré par Trello. Créez, organisez et gérez vos projets en équipe avec synchronisation instantanée.
 
-Currently, two official plugins are available:
+## Fonctionnalités
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Gestion des Tableaux
+- **Création et édition** de tableaux collaboratifs
+- **Gestion des membres** avec attribution de rôles
+- **Paramètres personnalisables** par tableau
 
-## React Compiler
+### Gestion des Listes et Cartes
+- **Glisser-déposer intuitif** pour réorganiser listes et cartes
+- **Création instantanée** de listes et cartes
+- **Persistance automatique** des modifications
+- **Suppression** avec confirmation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Système d'Étiquettes (Labels)
+- **Étiquettes colorées** personnalisables par tableau
+- **Code couleur** affiché sur les cartes (Trello-style)
+- **Effets visuels** : glow et surbrillance lors de la sélection
+- **Gestion complète** : ajout, modification, suppression
+- **Synchronisation en temps réel** via SignalR
 
-## Expanding the ESLint configuration
+### Assignations et Collaboration
+- **Assigner des utilisateurs** aux cartes
+- **Gestion des assignés** avec interface intuitive
+- **Affichage du nombre d'assignés** sur la carte
+- **Synchronisation instantanée** des assignations
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Système de Checklist
+- **Créer des checklists** détaillées dans les cartes
+- **Ajouter des éléments** avec coches
+- **Suivi de progression** (X/Y items complétés)
+- **Affichage du nombre** de checklists sur la carte
+- **Mises à jour en temps réel**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Métadonnées des Cartes
+- **Badges informatifs** : nombre d'assignés, checklists, commentaires
+- **Mises à jour en direct** lors des modifications
+- **Statut visuel** des tâches
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Système de Commentaires
+- **Commentaires en temps réel** sur les cartes
+- **Synchronisation instantanée** avec tous les clients connectés
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Synchronisation Temps Réel
+- **WebSocket via SignalR (Azure)** pour les mises à jour instantanées
+- **Événements en temps réel** :
+  - Création/modification/suppression de cartes
+  - Gestion des listes
+  - Assignations des utilisateurs
+  - Modifications de checklists
+  - Ajout/suppression d'étiquettes
+  - Nouveaux commentaires
+- **Pas de rechargement nécessaire** - tout se met à jour automatiquement
+
+### Authentification
+- **Système de login/register** sécurisé
+- **Gestion des sessions** utilisateur
+- **Contrôle d'accès** par tableau
+
+## Prérequis
+
+### Logiciels Requis
+- **Node.js** 18.x ou supérieur
+- **npm** 9.x ou supérieur (ou yarn)
+
+### Services Backend
+- **Backend LavenderFlow** accessible à `http://localhost:5000`
+- **SignalR Hub** sur `http://localhost:5000/lavenderFlowHub`
+
+## Installation et Lancement
+
+### 1. Cloner le Projet
+```bash
+git clone <repository-url>
+cd LavenderFlow-Front
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Installer les Dépendances
+```bash
+npm install
 ```
+
+### 3. Configuration de l'Environnement
+Créer un fichier `.env.local` à la racine du projet (si nécessaire) :
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+### 4. Lancer en Développement
+```bash
+npm run dev
+```
+
+L'application sera accessible à `http://localhost:5173`
+
+### Commandes Disponibles
+```bash
+npm run dev      # Lancer le serveur de développement
+npm run build    # Compiler pour la production
+npm run lint     # Exécuter les vérifications ESLint
+npm run preview  # Prévisualiser la build production
+```
+
+## Stack Technologique
+
+- **Frontend Framework** : React 18 + TypeScript
+- **Build Tool** : Vite
+- **Styling** : Tailwind CSS
+- **Drag & Drop** : @dnd-kit
+- **Real-time** : SignalR (Azure)
+- **Icons** : lucide-react
+- **State Management** : React Hooks
+- **HTTP Client** : Fetch API
+
+## Structure du Projet
+
+```
+src/
+├── components/          # Composants réutilisables
+│   ├── ui/             # Composants UI de base
+│   ├── board/          # Composants du tableau
+│   ├── auth/           # Composants d'authentification
+│   ├── profile/        # Pages de profil
+│   └── index/          # Pages d'accueil
+├── pages/              # Pages principales
+├── services/           # Services (SignalR, etc.)
+├── api_utils/          # Utilitaires API
+├── models/             # Types et interfaces
+├── constants/          # Constantes (couleurs, etc.)
+└── assets/             # Images et ressources
+```
+
+## Notes de Sécurité
+
+- Le token JWT est stocké dans `localStorage` sous la clé `authToken`
+- Les appels API incluent automatiquement le Bearer token
+- Les redirections vers `/login` se font sur erreur 401
+
+## Troubleshooting
+
+### Erreur de connexion SignalR
+- Vérifier que le backend est lancé sur `http://localhost:5000`
+- Vérifier que le token d'authentification est valide
+- Consulter la console du navigateur pour les messages d'erreur
+
+### Le build échoue
+```bash
+npm run build
+```
+- Vérifier qu'il n'y a pas d'erreurs TypeScript
+- Vérifier les logs du build pour plus de détails
+
+---
+## Contributeurs
+- Loïc DELPRAT
+- Romain BARREAU
+

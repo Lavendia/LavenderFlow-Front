@@ -32,7 +32,6 @@ export function ChecklistComponent({
     const [itemPopupOpen, setItemPopupOpen] = useState(false)
     const [selectedChecklistId, setSelectedChecklistId] = useState<number | null>(null)
 
-    // Charge les items de la checklist de manière sécurisée
     useEffect(() => {
         if (!checklists) return;
         checklists.forEach((checklist) => {
@@ -42,13 +41,11 @@ export function ChecklistComponent({
         })
     }, [checklists])
 
-    // Gestion centralisée et robuste de SignalR
     useEffect(() => {
         signalRService.setHandlers({
             onChecklistItemCreated: (item) => {
                 setChecklistItems((prev) => {
                     const currentItems = prev[item.checklistId] || [];
-                    // Évite les doublons avec le rendu optimiste local
                     if (currentItems.some(i => Number(i.id) === Number(item.id) || (i.id < 0 && i.name === item.name))) {
                         return {
                             ...prev,
@@ -70,7 +67,6 @@ export function ChecklistComponent({
                 }))
             },
             onChecklistItemDeleted: (itemId: number) => {
-                // Nettoyage global sur réception du signal de suppression
                 setChecklistItems((prev) => {
                     const updated = { ...prev }
                     for (const checklistId in updated) {
@@ -107,7 +103,7 @@ export function ChecklistComponent({
 
         try {
             const newChecklist = await APIChecklist.checklists.createChecklist(trimmedName, cardId)
-            
+
             setChecklistItems(prev => {
                 const updated = { ...prev }
                 updated[newChecklist.id] = updated[tempId] || []
@@ -143,7 +139,7 @@ export function ChecklistComponent({
 
         try {
             const newItem = await APIChecklist.checklistItems.createChecklistItem(trimmedName, selectedChecklistId)
-            
+
             setChecklistItems((prev) => ({
                 ...prev,
                 [selectedChecklistId]: (prev[selectedChecklistId] || []).map(item =>
@@ -207,7 +203,7 @@ export function ChecklistComponent({
             ...prev,
             [checklistId]: (prev[checklistId] || []).filter((item) => Number(item.id) !== Number(itemId))
         }))
-        
+
         try {
             // 2. Appel API de suppression
             await APIChecklist.checklistItems.deleteChecklistItem(itemId.toString())
