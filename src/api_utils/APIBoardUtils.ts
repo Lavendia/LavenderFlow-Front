@@ -30,6 +30,20 @@ export const APIBoard = {
         }
         return await response.json()
     },
+    async getBoardsByWorkspaceId(workspaceId: string) {
+        const response = await fetch(`/api/workspaces/${workspaceId}/boards`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+            },
+        })
+        if (response.status === 401) {
+            localStorage.removeItem("authToken")
+            window.location.replace("/login")
+        }
+        return await response.json()
+    },
     async createBoard(name: string, description: string, workspaceId: number) {
         const response = await fetch("/api/boards", {
             method: "POST",
