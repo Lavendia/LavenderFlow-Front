@@ -76,7 +76,7 @@ export function HeroSection() {
               <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
             ))}
             <div className="flex-1 bg-white/[0.06] rounded h-5 flex items-center justify-center text-[11px] text-white/30">
-              app.lavenderflow.io/workspace
+              app.lavenderflow.io/dashboard
             </div>
           </div>
           <BoardMockup />

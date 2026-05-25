@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 import AuthLayout from './pages/AuthLayout'
 import { HomePage } from "./pages/HomePage"
 import { ProfilePage } from './pages/ProfilePage'
@@ -12,7 +12,8 @@ export default function App() {
         <Route path="/login" element={<AuthLayout />} />
         <Route path="/register" element={<AuthLayout />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/workspace" element={<WorkspacePage />} />
+        <Route path="/dashboard" element={<WorkspacePage />} />
+        <Route path="/workspace" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   )

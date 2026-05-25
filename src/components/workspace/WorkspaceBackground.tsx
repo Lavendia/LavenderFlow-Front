@@ -2,19 +2,21 @@ import { useEffect, useState } from "react";
 import { APIBoard } from "@/src/api_utils/APIBoardUtils";
 import { APIWorkspace } from "@/src/api_utils/APIWorkspaceUtils";
 import type { BoardModel } from "@/src/models/BoardModels";
+import type { WorkspaceMemberModel, WorkspaceModel } from "@/src/models/WorkspaceModels";
+import {
+  canManageWorkspace,
+  fetchWorkspacesForCurrentUser,
+  getRoleForWorkspace,
+} from "@/src/utils/workspaceAccess";
 import { PopupDialog } from "../PopupDialog";
 import { BoardCard } from "./BoardCard";
 import { BoardCreationPopup } from "./BoardCreationPopup";
+import { WorkspaceMembersPopup } from "./WorkspaceMembersPopup";
 import { WorkspaceRenamePopup } from "./WorkspaceRenamePopup";
-
-type WorkspaceModel = {
-  id: number;
-  name: string;
-  description?: string | null;
-};
 
 type WorkspaceWithBoards = WorkspaceModel & {
   boards: BoardModel[];
+  myRole?: string;
 };
 
 function BoardCarousel({
@@ -68,12 +70,20 @@ export function WorkspaceBackground() {
   const [boardEditOpen, setBoardEditOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<BoardModel | null>(null);
   const [workspaceRenameInitialName, setWorkspaceRenameInitialName] = useState("");
+  const [memberships, setMemberships] = useState<WorkspaceMemberModel[]>([]);
+  const [membersPopupOpen, setMembersPopupOpen] = useState(false);
+  const [membersWorkspace, setMembersWorkspace] = useState<WorkspaceModel | null>(null);
 
   const loadWorkspaces = async () => {
-    const workspaceData = (await APIWorkspace.getWorkspaces()) as WorkspaceModel[];
+    const { workspaces: workspaceData, memberships: userMemberships } =
+      await fetchWorkspacesForCurrentUser();
+
+    setMemberships(userMemberships);
+
     const withBoards = await Promise.all(
       workspaceData.map(async (workspace) => ({
         ...workspace,
+        myRole: getRoleForWorkspace(userMemberships, workspace.id),
         boards: (await APIBoard.getBoardsByWorkspaceId(workspace.id.toString())) as BoardModel[],
       })),
     );
@@ -176,6 +186,12 @@ export function WorkspaceBackground() {
     setWorkspaceMenuOpen(null);
   };
 
+  const openWorkspaceMembers = (workspace: WorkspaceModel) => {
+    setMembersWorkspace(workspace);
+    setMembersPopupOpen(true);
+    setWorkspaceMenuOpen(null);
+  };
+
   const openBoardEdit = (board: BoardModel) => {
     setSelectedBoard(board);
     setBoardEditOpen(true);
@@ -222,7 +238,10 @@ export function WorkspaceBackground() {
               <p className="text-sm text-[#EFBBFF]">No workspaces yet. Create your first one.</p>
             </div>
           ) : (
-            workspaces.map((workspace) => (
+            workspaces.map((workspace) => {
+              const canManage = canManageWorkspace(workspace.myRole);
+
+              return (
               <section
                 key={workspace.id}
                 className="rounded-3xl border border-[#3d1a6e] bg-[#2d1052] p-5 shadow-lg"
@@ -251,17 +270,28 @@ export function WorkspaceBackground() {
                         <button
                           type="button"
                           className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-[#5a2c91]"
-                          onClick={() => openWorkspaceRename(workspace)}
+                          onClick={() => openWorkspaceMembers(workspace)}
                         >
-                          Rename
+                          Members
                         </button>
-                        <button
-                          type="button"
-                          className="block w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-red-500/20"
-                          onClick={() => handleDeleteWorkspace(workspace.id)}
-                        >
-                          Delete
-                        </button>
+                        {canManage && (
+                          <>
+                            <button
+                              type="button"
+                              className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-[#5a2c91]"
+                              onClick={() => openWorkspaceRename(workspace)}
+                            >
+                              Rename
+                            </button>
+                            <button
+                              type="button"
+                              className="block w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-red-500/20"
+                              onClick={() => handleDeleteWorkspace(workspace.id)}
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -301,7 +331,8 @@ export function WorkspaceBackground() {
                   </div>
                 )}
               </section>
-            ))
+            );
+            })
           )}
         </div>
       </div>
@@ -321,6 +352,19 @@ export function WorkspaceBackground() {
         initialValue={workspaceRenameInitialName}
         onConfirm={handleRenameWorkspace}
         onCancel={closeWorkspaceRename}
+      />
+
+      <WorkspaceMembersPopup
+        isOpen={membersPopupOpen}
+        workspaceId={membersWorkspace?.id ?? null}
+        workspaceName={membersWorkspace?.name ?? ""}
+        canManage={canManageWorkspace(
+          membersWorkspace ? getRoleForWorkspace(memberships, membersWorkspace.id) : undefined,
+        )}
+        onClose={() => {
+          setMembersPopupOpen(false);
+          setMembersWorkspace(null);
+        }}
       />
 
       <BoardCreationPopup
