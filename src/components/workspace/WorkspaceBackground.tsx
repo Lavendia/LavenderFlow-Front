@@ -5,6 +5,7 @@ import type { BoardModel } from "@/src/models/BoardModels";
 import { PopupDialog } from "../PopupDialog";
 import { BoardCard } from "./BoardCard";
 import { BoardCreationPopup } from "./BoardCreationPopup";
+import { WorkspaceRenamePopup } from "./WorkspaceRenamePopup";
 
 type WorkspaceModel = {
   id: number;
@@ -61,10 +62,12 @@ export function WorkspaceBackground() {
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false);
   const [boardPopupOpen, setBoardPopupOpen] = useState(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number | null>(null);
+  const [renamingWorkspaceId, setRenamingWorkspaceId] = useState<number | null>(null);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState<number | null>(null);
   const [workspaceRenameOpen, setWorkspaceRenameOpen] = useState(false);
   const [boardEditOpen, setBoardEditOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<BoardModel | null>(null);
+  const [workspaceRenameInitialName, setWorkspaceRenameInitialName] = useState("");
 
   const loadWorkspaces = async () => {
     const workspaceData = (await APIWorkspace.getWorkspaces()) as WorkspaceModel[];
@@ -93,6 +96,7 @@ export function WorkspaceBackground() {
 
   const handleCreateWorkspace = async (name: string) => {
     await APIWorkspace.createWorkspace(name, "", false);
+    setWorkspacePopupOpen(false);
     await loadWorkspaces();
   };
 
@@ -129,11 +133,30 @@ export function WorkspaceBackground() {
     await loadWorkspaces();
   };
 
-  const handleRenameWorkspace = async (name: string) => {
-    if (!selectedWorkspaceId) return;
+  const closeWorkspaceRename = () => {
+    setWorkspaceRenameOpen(false);
+    setWorkspaceRenameInitialName("");
+    setRenamingWorkspaceId(null);
+  };
 
-    await APIWorkspace.updateWorkspace(selectedWorkspaceId.toString(), { name });
-    await loadWorkspaces();
+  const handleRenameWorkspace = async (name: string) => {
+    const workspaceId = renamingWorkspaceId;
+    if (workspaceId == null) return;
+
+    closeWorkspaceRename();
+    setWorkspaces((prev) =>
+      prev.map((workspace) =>
+        workspace.id === workspaceId ? { ...workspace, name } : workspace,
+      ),
+    );
+
+    try {
+      await APIWorkspace.updateWorkspace(workspaceId.toString(), { name });
+      await loadWorkspaces();
+    } catch (error) {
+      console.error("Failed to rename workspace:", error);
+      await loadWorkspaces();
+    }
   };
 
   const handleDeleteWorkspace = async (workspaceId: number) => {
@@ -147,7 +170,8 @@ export function WorkspaceBackground() {
   };
 
   const openWorkspaceRename = (workspace: WorkspaceModel) => {
-    setSelectedWorkspaceId(workspace.id);
+    setRenamingWorkspaceId(workspace.id);
+    setWorkspaceRenameInitialName(workspace.name);
     setWorkspaceRenameOpen(true);
     setWorkspaceMenuOpen(null);
   };
@@ -290,12 +314,13 @@ export function WorkspaceBackground() {
         onCancel={() => setWorkspacePopupOpen(false)}
       />
 
-      <PopupDialog
+      <WorkspaceRenamePopup
         isOpen={workspaceRenameOpen}
         title="Rename workspace"
         placeholder="Enter workspace name..."
+        initialValue={workspaceRenameInitialName}
         onConfirm={handleRenameWorkspace}
-        onCancel={() => setWorkspaceRenameOpen(false)}
+        onCancel={closeWorkspaceRename}
       />
 
       <BoardCreationPopup

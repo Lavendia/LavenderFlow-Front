@@ -1,3 +1,18 @@
+async function parseResponseBody<T>(response: Response): Promise<T | undefined> {
+    if (response.status === 401) {
+        localStorage.removeItem("authToken")
+        window.location.replace("/login")
+        return undefined
+    }
+
+    const text = await response.text()
+    if (!text) {
+        return undefined
+    }
+
+    return JSON.parse(text) as T
+}
+
 export const APIWorkspace = {
     async getWorkspaces() {
         const response = await fetch("/api/workspaces", {
@@ -36,11 +51,7 @@ export const APIWorkspace = {
             },
             body: JSON.stringify({ name, description, isPublic })
         })
-        if (response.status === 401) {
-            localStorage.removeItem("authToken")
-            window.location.replace("/login")
-        }
-        return await response.json()
+        return await parseResponseBody(response)
     },
     async deleteWorkspace(id: string) {
         const response = await fetch(`/api/workspaces/${id}`, {
@@ -50,11 +61,7 @@ export const APIWorkspace = {
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
-        if (response.status === 401) {
-            localStorage.removeItem("authToken")
-            window.location.replace("/login")
-        }
-        return await response.json()
+        return await parseResponseBody(response)
     },
     async updateWorkspace(id: string, data: { name?: string, description?: string, isPublic?: boolean }) {
         const response = await fetch(`/api/workspaces/${id}`, {
@@ -65,10 +72,10 @@ export const APIWorkspace = {
             },
             body: JSON.stringify(data)
         })
-        if (response.status === 401) {
-            localStorage.removeItem("authToken")
-            window.location.replace("/login")
+        if (!response.ok) {
+            throw new Error(`Failed to update workspace (${response.status})`)
         }
-        return await response.json()
+
+        return await parseResponseBody(response)
     }
 }

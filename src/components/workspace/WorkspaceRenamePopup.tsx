@@ -6,7 +6,7 @@ interface WorkspaceRenamePopupProps {
   placeholder?: string;
   confirmLabel?: string;
   initialValue?: string;
-  onConfirm: (value: string) => void;
+  onConfirm: (value: string) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -20,6 +20,7 @@ export function WorkspaceRenamePopup({
   onCancel,
 }: WorkspaceRenamePopupProps) {
   const [value, setValue] = useState(initialValue);
+  const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -29,10 +30,15 @@ export function WorkspaceRenamePopup({
     setTimeout(() => inputRef.current?.focus(), 0);
   }, [isOpen, initialValue]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const trimmed = value.trim();
-    if (trimmed) {
-      onConfirm(trimmed);
+    if (!trimmed || submitting) return;
+
+    setSubmitting(true);
+    try {
+      await onConfirm(trimmed);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -70,14 +76,17 @@ export function WorkspaceRenamePopup({
 
         <div className="flex justify-end gap-3">
           <button
+            type="button"
             onClick={handleCancel}
-            className="rounded border border-[#5a2c91] px-4 py-2 text-white transition-colors hover:bg-[#5a2c91]/30"
+            disabled={submitting}
+            className="rounded border border-[#5a2c91] px-4 py-2 text-white transition-colors hover:bg-[#5a2c91]/30 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
-            onClick={handleConfirm}
-            disabled={!value.trim()}
+            type="button"
+            onClick={() => void handleConfirm()}
+            disabled={!value.trim() || submitting}
             className="rounded bg-[#D896FF] px-4 py-2 font-bold text-[#2d1052] transition-colors hover:bg-[#D896FF]/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {confirmLabel}
