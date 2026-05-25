@@ -27,6 +27,23 @@ export const APIUser = {
         }
         return await response.json()
     },
+    async getUserIdByEmail(email: string) {
+        const response = await fetch(`/api/users/email?email=${encodeURIComponent(email)}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+            },
+        })
+        if (response.status === 401) {
+            localStorage.removeItem("authToken")
+            window.location.replace("/login")
+        }
+        if (!response.ok) {
+            throw new Error(`User not found: ${response.status}`)
+        }
+        return await response.json()
+    },
     async getUserById(userId: string) {
         const response = await fetch(`/api/users/${userId}`, {
             method: "GET",
@@ -68,6 +85,6 @@ export const APIUser = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
-        return await response.json()
+        return
     }
 }
