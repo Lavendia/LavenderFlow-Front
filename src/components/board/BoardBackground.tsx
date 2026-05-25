@@ -34,7 +34,7 @@ export function BoardBackground() {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 5, 
+                distance: 5,
             },
         })
     )
@@ -64,46 +64,45 @@ export function BoardBackground() {
                 return
             }
         }
-
-        const connectSignalR = async () => {
-            signalRService.setHandlers({
-                onBoardUpdated: (updatedBoard) => {
-                    setBoard(updatedBoard)
-                    setDraftName(updatedBoard.name)
-                },
-                onBoardDeleted: () => {
-                    window.location.href = "/dashboard"
-                },
-                onListCreated: (list: ListModel) => {
-                    setLists(prev => [...prev, list])
-                },
-                onListUpdated: (updatedList: ListModel) => {
-                    setLists(prev => prev.map(l => l.id === updatedList.id ? updatedList : l))
-                },
-                onListDeleted: (listId: number) => {
-                    setLists(prev => prev.filter(l => l.id !== listId))
-                    setCards(prev => prev.filter(c => c.listItemId !== listId))
-                },
-                onCardCreated: (card: CardModel) => {
-                    setCards(prev => [...prev, card])
-                },
-                onCardUpdated: (updatedCard: CardModel) => {
-                    setCards(prev => prev.map(c => c.id === updatedCard.id ? updatedCard : c))
-                },
-                onCardDeleted: (cardId: number) => {
-                    setCards(prev => prev.filter(c => c.id !== cardId))
-                },
-            })
-            await signalRService.connect(boardId)
-        }
-
         fetchData()
-        connectSignalR()
-
-        return () => {
-            signalRService.disconnect(boardId)
-        }
     }, [])
+
+    useEffect(() => {
+        if (board === null) return
+
+        signalRService.connect(board.id.toString())
+
+        signalRService.subscribe(board.id.toString(), {
+            onBoardUpdated: (updatedBoard) => {
+                setBoard(updatedBoard)
+                setDraftName(updatedBoard.name)
+            },
+            onBoardDeleted: () => {
+                window.location.href = "/dashboard"
+            },
+            onListCreated: (list: ListModel) => {
+                setLists(prev => [...prev, list])
+            },
+            onListUpdated: (updatedList: ListModel) => {
+                setLists(prev => prev.map(l => l.id === updatedList.id ? updatedList : l))
+            },
+            onListDeleted: (listId: number) => {
+                setLists(prev => prev.filter(l => l.id !== listId))
+                setCards(prev => prev.filter(c => c.listItemId !== listId))
+            },
+            onCardCreated: (card: CardModel) => {
+                setCards(prev => [...prev, card])
+            },
+            onCardUpdated: (updatedCard: CardModel) => {
+                setCards(prev => prev.map(c => c.id === updatedCard.id ? updatedCard : c))
+            },
+            onCardDeleted: (cardId: number) => {
+                setCards(prev => prev.filter(c => c.id !== cardId))
+            },
+        })
+
+        return () => signalRService.unsubscribe(board.id.toString())
+    }, [board?.id])
 
     useEffect(() => {
         if (board?.name) setDraftName(board.name)

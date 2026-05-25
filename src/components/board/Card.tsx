@@ -5,7 +5,7 @@ import { APIRelation } from "@/src/api_utils/APIRelationUtils"
 import { CardDetailPopup } from "./CardDetailPopup"
 import { CSS } from "@dnd-kit/utilities"
 import { useSortable } from "@dnd-kit/sortable"
-import { CheckSquare, Clock, ListTodo, User } from "lucide-react"
+import { CheckSquare, Clock, ListTodo } from "lucide-react"
 import { signalRService } from "@/src/services/SignalRService"
 
 export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (cardId: number) => void }) {
@@ -13,6 +13,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
     const [checklistCount, setChecklistCount] = useState(0)
     const [assignedUsers, setAssignedUsers] = useState<UserModel[]>([])
     const [currentCard, setCurrentCard] = useState(card)
+    const [labelColor, setLabelColor] = useState<string>("")
 
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: card.id })
     const style = { transform: CSS.Transform.toString(transform), transition }
@@ -24,6 +25,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
                 const checklists = await APIChecklist.checklists.getChecklistsByCardId(card.id.toString())
                 setChecklistCount(checklists?.length || 0)
                 fetchAssignedUsers(card.id)
+                fetchLabelColor(card.id)
             } catch (error) {
                 console.error("Failed to load card metadata:", error)
             }
@@ -32,33 +34,37 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
     }, [card.id, card])
 
     useEffect(() => {
+        const subscriberId = `card-${card.id}`
         const fetchMetadata = async () => {
             try {
                 const checklists = await APIChecklist.checklists.getChecklistsByCardId(card.id.toString())
                 setChecklistCount(checklists?.length || 0)
                 fetchAssignedUsers(card.id)
+                fetchLabelColor(card.id)
             } catch (error) {
                 console.error("Failed to reload card metadata:", error)
             }
         }
-
-        signalRService.setHandlers({
-            onChecklistCreated: () => {
-                fetchMetadata()
+        signalRService.subscribe(subscriberId, {
+            onCardUpdated: (updatedCard) => {
+                if (updatedCard.id === card.id) {
+                    setCurrentCard(updatedCard)
+                }
             },
-            onChecklistUpdated: () => {
-                fetchMetadata()
+            onCardDeleted: (deletedCardId) => {
+                if (deletedCardId === card.id) {
+                    onDeleteCard(card.id)
+                }
             },
-            onChecklistDeleted: () => {
-                fetchMetadata()
-            },
-            onAssignmentCreated: () => {
-                fetchMetadata()
-            },
-            onAssignmentDeleted: () => {
-                fetchMetadata()
-            }
+            onChecklistCreated: () => fetchMetadata(),
+            onChecklistUpdated: () => fetchMetadata(),
+            onChecklistDeleted: () => fetchMetadata(),
+            onAssignmentCreated: () => fetchMetadata(),
+            onAssignmentDeleted: () => fetchMetadata(),
+            onLabelAddedToCard: () => fetchLabelColor(card.id),
+            onLabelRemovedFromCard: () => fetchLabelColor(card.id),
         })
+        return () => signalRService.unsubscribe(subscriberId)
     }, [card.id])
 
     const fetchAssignedUsers = async (cardId: number) => {
@@ -87,12 +93,26 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
         }
     }
 
+    const fetchLabelColor = async (cardId: number) => {
+        try {
+            const cardLabels = await APIRelation.labels.getLabelsByCardId(cardId.toString())
+            if (cardLabels && cardLabels.length > 0) {
+                setLabelColor(cardLabels[0].colorHex)
+            } else {
+                setLabelColor("")
+            }
+        } catch (error) {
+            console.error("Failed to fetch label color:", error)
+        }
+    }
+
     const handleUpdateCard = async (updatedCard: CardModel) => {
         setCurrentCard(updatedCard)
         try {
             const checklists = await APIChecklist.checklists.getChecklistsByCardId(updatedCard.id.toString())
             setChecklistCount(checklists?.length || 0)
             fetchAssignedUsers(card.id)
+            fetchLabelColor(card.id) // ← add this line
         } catch (error) {
             console.error("Failed to reload card metadata:", error)
         }
@@ -140,7 +160,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
                 {...attributes}
                 {...listeners}
                 onClick={() => setPopupOpen(true)}
-                className="flex flex-col gap-2.5 bg-[#5a2c91] border border-[#7a3db8] rounded-lg p-3 shadow-sm cursor-pointer hover:border-[#D896FF] hover:shadow-md transition-all text-left w-full"
+                className="relative flex flex-col gap-2.5 bg-[#5a2c91] border border-[#7a3db8] rounded-lg p-3 shadow-sm cursor-pointer hover:border-[#D896FF] hover:shadow-md transition-all text-left w-full overflow-hidden"
             >
                 <div className="flex justify-between items-start w-full gap-2">
                     <h4 className="text-white font-semibold text-sm wrap-break-word flex-1 leading-tight">
@@ -160,8 +180,19 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
                     </button>
                 </div>
 
-                {(checklistCount > 0 || currentCard.deadline || assignedUsers.length > 0) && (
+                {(checklistCount > 0 || currentCard.deadline || assignedUsers.length > 0 || labelColor) && (
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5 select-none w-full">
+
+                        {labelColor && (
+                            <div
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{
+                                    backgroundColor: `${labelColor}`,
+                                    boxShadow: `0 0 6px ${labelColor}99`
+                                }}
+                                title="Label"
+                            />
+                        )}
 
                         {renderCardDeadlineBadge()}
 

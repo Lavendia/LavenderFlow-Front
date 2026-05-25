@@ -6,9 +6,10 @@ import { ChecklistComponent } from "./ChecklistComponent"
 import ReactMarkdown from "react-markdown"
 import { signalRService } from "@/src/services/SignalRService"
 import type { CardModel, UserModel } from "@/src/models/BoardModels"
-import { Calendar, Trash2, CheckSquare, Square, Users, SendHorizontal } from "lucide-react"
+import { Calendar, Trash2, CheckSquare, Square, Users, SendHorizontal, Tag } from "lucide-react"
 import { APIChatMessage } from "@/src/api_utils/APIChatMessageUtils"
 import { APIUser } from "@/src/api_utils/APIUserUtils"
+import { APILabels } from "@/src/api_utils/APILabelsUtils"
 
 interface Checklist {
     id: number
@@ -20,6 +21,13 @@ interface User {
     id: number
     name: string
     email: string
+}
+
+interface Label {
+    id: number
+    name: string
+    colorHex: string
+    boardId: number
 }
 
 interface ChatMessage {
@@ -48,6 +56,8 @@ export function CardDetailPopup({
     const [checklists, setChecklists] = useState<Checklist[]>([])
     const [users, setUsers] = useState<User[]>([])
     const [assignedUsers, setAssignedUsers] = useState<number[]>([])
+    const [labels, setLabels] = useState<Label[]>([])
+    const [assignedLabels, setAssignedLabels] = useState<number[]>([])
     const [isEditingName, setIsEditingName] = useState(false)
     const [draftName, setDraftName] = useState(card?.name || "")
     const inputRef = useRef<HTMLInputElement>(null)
@@ -61,14 +71,9 @@ export function CardDetailPopup({
 
     useEffect(() => {
         if (!isOpen || !card) return
-
+        const cardId = card.id
         setDraftName(card.name)
         setDescription(card.description || "")
-        fetchChecklists(card.id)
-        fetchUsersAndPermissions()
-        fetchAssignedUsers(card.id)
-        fetchChatMessages(card.id)
-
         if (card.deadline) {
             const dateObj = new Date(card.deadline)
             if (dateObj.getFullYear() === 9999) {
@@ -85,21 +90,49 @@ export function CardDetailPopup({
             setDueDate("")
             setIsDeadlineComplete(false)
         }
-    }, [isOpen, card?.id])
 
-    useEffect(() => {
-        if (!isOpen || !card) return
+        const loadAll = async () => {
+            try {
+                const boardId = window.location.search.split('id=')[1]
 
-        const currentCardId = card.id
+                const [checklists, rawMembers, assignments, allLabels, cardLabels, chatData] = await Promise.all([
+                    APIChecklist.checklists.getChecklistsByCardId(cardId.toString()),
+                    APIRelation.boards.getBoardUsers(boardId),
+                    APIRelation.cards.getCardAssignees(cardId.toString()),
+                    APILabels.getAllLabels(),
+                    APIRelation.labels.getLabelsByCardId(cardId.toString()),
+                    APIChatMessage.getChatMessagesByCardId(cardId.toString()),
+                ])
+                setChecklists(checklists)
+                const formattedUsers = rawMembers.map((m: any) => ({
+                    id: m.userId || m.id,
+                    name: m.userName || m.name,
+                    email: m.userEmail || m.email
+                }))
+                setUsers(formattedUsers)
+                setAssignedUsers(assignments.map((a: any) => a.userId || a.id))
+                setLabels(allLabels)
+                setAssignedLabels(cardLabels.map((cl: any) => cl.labelId || cl.id))
+                const messagesWithUsers = await Promise.all(
+                    chatData.map(async (d: any) => ({
+                        ...d,
+                        userName: (await APIUser.getUserById(d.userId.toString())).name
+                    }))
+                )
+                setAllChatMessages(messagesWithUsers)
+            } catch (error) {
+                console.error("Failed to load card details:", error)
+            }
+        }
 
-        signalRService.setHandlers({
+        loadAll()
+
+        signalRService.subscribe("cardPopup", {
             onCardUpdated: (updatedCard: CardModel) => {
-            if (updatedCard.id === currentCardId) {
+                if (updatedCard.id !== cardId) return
                 onUpdate(updatedCard)
-
                 setDescription(updatedCard.description || "")
                 setDraftName(updatedCard.name || "")
-
                 if (updatedCard.deadline) {
                     const dateObj = new Date(updatedCard.deadline)
                     if (dateObj.getFullYear() === 9999) {
@@ -113,37 +146,20 @@ export function CardDetailPopup({
                     setDueDate("")
                     setIsDeadlineComplete(false)
                 }
-            }
-        },
-            onChecklistCreated: (checklist) => {
-                if (checklist.cardId === currentCardId) {
-                    setChecklists(prev => {
-                        if (prev.some(c => c.id === checklist.id || c.name === checklist.name)) return prev
-                        return [...prev, checklist]
-                    })
-                }
             },
-            onChecklistUpdated: (updatedChecklist) => {
-                setChecklists(prev =>
-                    prev.map(c => c.id === updatedChecklist.id ? updatedChecklist : c)
-                )
-            },
-            onChecklistDeleted: (checklistId: number) => {
-                setChecklists(prev => prev.filter(c => c.id !== checklistId))
-            },
-            onAssignmentCreated: (assignment) => {
-                if (assignment.cardId === currentCardId) {
-                    setAssignedUsers(prev => prev.includes(assignment.userId) ? prev : [...prev, assignment.userId])
-                }
-            },
-            onAssignmentDeleted: (_assignmentId: number) => {
-                fetchAssignedUsers(currentCardId)
-            },
-            onChatMessageCreated: () => {
-                fetchChatMessages(card.id)
-            }
+            onChecklistCreated: () => {loadAll()},
+            onChecklistUpdated: () => {loadAll()},
+            onChecklistDeleted: () => {loadAll()},
+            onAssignmentCreated: () => {loadAll()},
+            onAssignmentDeleted: () => {loadAll()},
+            onChatMessageCreated: () => {loadAll()},
+            onLabelAddedToCard: () => {loadAll()},
+            onLabelRemovedFromCard: () => {loadAll()}
         })
-    }, [isOpen, card?.id, card])
+
+        return () => signalRService.unsubscribe("cardPopup")
+    }, [isOpen, card?.id])
+
 
     useEffect(() => {
         APIUser.getMe().then(user => setUser(user))
@@ -152,7 +168,7 @@ export function CardDetailPopup({
     const commitRename = async () => {
         const trimmed = draftName.trim()
         if (trimmed && trimmed !== card!.name) {
-            await APICard.updateCard(card!.id.toString(), { name: trimmed })
+            await APICard.updateCard(card!.id.toString(), { name: trimmed, deadline: card!.deadline })
             card!.name = trimmed
         } else {
             setDraftName(card!.name)
@@ -168,60 +184,10 @@ export function CardDetailPopup({
         }
     }
 
-    const fetchChatMessages = async (cardId: number) => {
-        try {
-            const data: ChatMessage[] =
-                await APIChatMessage.getChatMessagesByCardId(cardId.toString())
-
-            const messagesWithUsers = await Promise.all(
-                data.map(async (d) => ({
-                    ...d, userName: (await APIUser.getUserById(d.userId.toString())).name
-                }))
-            )
-            setAllChatMessages(messagesWithUsers)
-
-        } catch (error) {
-            console.error("Failed to fetch chat messages:", error)
-        }
-    }
-
-    const fetchChecklists = async (cardId: number) => {
-        try {
-            const data = await APIChecklist.checklists.getChecklistsByCardId(cardId.toString())
-            setChecklists(data)
-        } catch (error) {
-            console.error("Failed to fetch checklists:", error)
-        }
-    }
-
-    const fetchUsersAndPermissions = async () => {
-        try {
-            const boardId = window.location.search.split('id=')[1]
-            const rawMembers = await APIRelation.boards.getBoardUsers(boardId)
-            const formattedUsers = rawMembers.map((m: any) => ({
-                id: m.userId || m.id,
-                name: m.userName || m.name,
-                email: m.userEmail || m.email
-            }))
-            setUsers(formattedUsers)
-        } catch (error) {
-            console.error("Failed to fetch users:", error)
-        }
-    }
-
-    const fetchAssignedUsers = async (cardId: number) => {
-        try {
-            const assignments = await APIRelation.cards.getCardAssignees(cardId.toString())
-            setAssignedUsers(assignments.map((a: any) => a.userId || a.id))
-        } catch (error) {
-            console.error("Failed to fetch assigned users:", error)
-        }
-    }
-
     const handleSaveDescription = async () => {
         if (card) {
             try {
-                await APICard.updateCard(card.id.toString(), { description })
+                await APICard.updateCard(card.id.toString(), { description, deadline: card.deadline })
                 onUpdate({ ...card, description })
             } catch (error) {
                 console.error("Failed to update description:", error)
@@ -244,6 +210,25 @@ export function CardDetailPopup({
             }
         } catch (error) {
             console.error("Failed to update assignment:", error)
+        }
+    }
+
+    const handleToggleLabel = async (labelId: number) => {
+        try {
+            if (assignedLabels.includes(labelId)) {
+                // Deselect current label
+                await APIRelation.labels.removeLabelFromCard(card!.id.toString(), labelId.toString())
+                setAssignedLabels([])
+            } else {
+                // Remove any existing label first, then assign new one
+                for (const existingLabelId of assignedLabels) {
+                    await APIRelation.labels.removeLabelFromCard(card!.id.toString(), existingLabelId.toString())
+                }
+                await APIRelation.labels.addLabelToCard(card!.id, labelId)
+                setAssignedLabels([labelId])
+            }
+        } catch (error) {
+            console.error("Failed to update label:", error)
         }
     }
 
@@ -435,6 +420,41 @@ export function CardDetailPopup({
                 </div>
 
                 <div className="mb-6">
+                    <div className="flex items-center gap-1.5 mb-3 text-[#D896FF]">
+                        <Tag className="h-4 w-4" />
+                        <label className="font-bold text-sm uppercase tracking-wider">Labels</label>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {labels.length === 0 ? (
+                            <p className="text-xs text-gray-400">No labels available</p>
+                        ) : (
+                            labels.map((label) => {
+                                const isAssigned = assignedLabels.includes(label.id)
+                                const hex = `${label.colorHex}`
+                                return (
+                                    <button
+                                        key={label.id}
+                                        onClick={() => handleToggleLabel(label.id)}
+                                        className={`px-3 py-1.5 rounded text-xs font-medium border transition-all ${
+                                            isAssigned
+                                                ? "text-white ring-2 ring-offset-2 ring-offset-[#2d1052]"
+                                                : "text-white opacity-50 hover:opacity-80"
+                                        }`}
+                                        style={{
+                                            backgroundColor: isAssigned ? hex : `${hex}33`,
+                                            borderColor: hex,
+                                            ...(isAssigned && { ringColor: hex, boxShadow: `0 0 10px ${hex}60` })
+                                        }}
+                                    >
+                                        {isAssigned ? `✓ ${label.name}` : label.name}
+                                    </button>
+                                )
+                            })
+                        )}
+                    </div>
+                </div>
+
+                <div className="mb-6">
                     <label className="text-[#D896FF] font-semibold text-sm block mb-2">Description</label>
                     {!editingDescription ? (
                         <>
@@ -506,7 +526,7 @@ export function CardDetailPopup({
                                             {message.userName}
                                         </span>
                                         <div
-                                            className={`px-4 py-2 rounded-2xl break-words shadow-sm ${
+                                            className={`px-4 py-2 rounded-2xl wrap-break-word shadow-sm ${
                                                 isMe
                                                     ? "bg-[#D896FF] text-[#2d1052] rounded-br-sm"
                                                     : "bg-[#3d1a6e] text-white rounded-bl-sm"

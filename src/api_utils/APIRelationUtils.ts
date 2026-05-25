@@ -205,5 +205,78 @@ export const APIRelation = {
             }
             return await response.json()
         }
+    },
+    labels: {
+        async getAllCardLabels() {
+            const response = await fetch(`/api/cardlabels`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getLabelsByCardId(cardId: string) {
+            const response = await fetch(`/api/cardlabels/card/${cardId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getCardsByLabelId(labelId: string) {
+            const response = await fetch(`/api/cardlabels/label/${labelId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async addLabelToCard(cardId: number, labelId: number) {
+            const response = await fetch(`/api/cardlabels`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                },
+                body: JSON.stringify({ cardId, labelId })
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async removeLabelFromCard(cardId: string, labelId: string) {
+            const response = await fetch(`/api/cardlabels/card/${cardId}/label/${labelId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return
+        }
     }
 }
