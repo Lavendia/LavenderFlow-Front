@@ -25,6 +25,9 @@ export const APIBoard = {
             localStorage.removeItem("authToken")
             window.location.replace("/login")
         }
+        if (!response.ok) {
+            throw new Error(`Failed to fetch board: ` + boardId)
+        }
         return await response.json()
     },
     async createBoard(name: string, description: string, workspaceId: number) {

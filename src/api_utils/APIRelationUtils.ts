@@ -75,7 +75,7 @@ export const APIRelation = {
     },
     cards: {
         async getCardAssignees(cardId: string) {
-            const response = await fetch(`/api/cardassigments/card/${cardId}`, {
+            const response = await fetch(`/api/cardassignments/card/${cardId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -89,7 +89,7 @@ export const APIRelation = {
             return await response.json()
         },
         async addAssigneeToCard(cardId: number, userId: number) {
-            const response = await fetch(`/api/cardassigments`, {
+            const response = await fetch(`/api/cardassignments`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export const APIRelation = {
             return await response.json()
         },
         async removeAssigneeFromCard(cardId: string, userId: string) {
-            const response = await fetch(`/api/cardassigments?cardId=${cardId}&userId=${userId}`, {
+            const response = await fetch(`/api/cardassignments?cardId=${cardId}&userId=${userId}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

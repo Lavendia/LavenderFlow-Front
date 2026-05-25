@@ -1,30 +1,55 @@
 import { APIBoard } from "@/src/api_utils/APIBoardUtils"
 import { APICard } from "@/src/api_utils/APICardUtils"
 import { APIList } from "@/src/api_utils/APIListUtils"
-import type {BoardModel, CardModel, ListModel } from "@/src/models/BoardModels"
-import { useEffect, useState } from "react"
+import type { BoardModel, CardModel, ListModel } from "@/src/models/BoardModels"
+import { useEffect, useRef, useState } from "react"
 import { List } from "./ListItem"
 import { PopupDialog } from "../PopupDialog"
-import { connection } from "@/src/api_utils/APISignalrUtils"
-import { HubConnectionState } from "@microsoft/signalr/dist/esm/HubConnection"
+import { Settings } from "lucide-react"
+import { BoardSettingsPopup } from "./BoardSettingsPopup"
+import { signalRService } from "@/src/services/SignalRService"
+import {
+    DndContext,
+    closestCorners,
+    type DragEndEvent,
+    type DragOverEvent,
+    PointerSensor,
+    useSensor,
+    useSensors
+} from "@dnd-kit/core"
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 
 export function BoardBackground() {
     const [ board, setBoard ] = useState<BoardModel | null>(null)
     const [ lists, setLists ] = useState<ListModel[]>([])
     const [ cards, setCards ] = useState<CardModel[]>([])
     const [ popupOpen, setPopupOpen ] = useState(false)
+    const [isEditingName, setIsEditingName] = useState(false)
+    const [draftName, setDraftName] = useState("")
+    const inputRef = useRef<HTMLInputElement>(null)
+    const [settingsOpen, setSettingsOpen] = useState(false)
+    const boardId = window.location.search.split("id=")[1]
 
-    const boardId = window.location.search.split("id=")[1];
+    // Activation constraint preserves normal click behaviors for opening popups
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, 
+            },
+        })
+    )
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const boardResponse = await APIBoard.getBoardById(boardId)
+
                 setBoard({
                     id: boardResponse.id,
                     name: boardResponse.name,
                     description: boardResponse.description
                 })
+                setDraftName(boardResponse.name)
 
                 const listsResponse = await APIList.getListsByBoardId(boardId)
                 setLists(listsResponse)
@@ -32,90 +57,77 @@ export function BoardBackground() {
                 const cardsResponses = await Promise.all(
                     listsResponse.map((list: ListModel) => APICard.getCardsByListId(list.id.toString()))
                 )
-
                 setCards(cardsResponses.flat())
-
             } catch (error) {
                 console.error("Failed to load data:", error)
+                window.location.replace("/dashboard")
+                return
             }
         }
 
-        const connectBoardHub = async () => {
-            try {
-                if (connection.state !== HubConnectionState.Connected) {
-                    await connection.start();
-                }
-                await connection.invoke(
-                    "JoinBoard",
-                    Number(boardId)
-                );
-                console.log("Joined board",boardId );
-            }
-            catch(error)
-            {
-                console.error(error);
-            }
-        };
+        const connectSignalR = async () => {
+            signalRService.setHandlers({
+                onBoardUpdated: (updatedBoard) => {
+                    setBoard(updatedBoard)
+                    setDraftName(updatedBoard.name)
+                },
+                onBoardDeleted: () => {
+                    window.location.href = "/dashboard"
+                },
+                onListCreated: (list: ListModel) => {
+                    setLists(prev => [...prev, list])
+                },
+                onListUpdated: (updatedList: ListModel) => {
+                    setLists(prev => prev.map(l => l.id === updatedList.id ? updatedList : l))
+                },
+                onListDeleted: (listId: number) => {
+                    setLists(prev => prev.filter(l => l.id !== listId))
+                    setCards(prev => prev.filter(c => c.listItemId !== listId))
+                },
+                onCardCreated: (card: CardModel) => {
+                    setCards(prev => [...prev, card])
+                },
+                onCardUpdated: (updatedCard: CardModel) => {
+                    setCards(prev => prev.map(c => c.id === updatedCard.id ? updatedCard : c))
+                },
+                onCardDeleted: (cardId: number) => {
+                    setCards(prev => prev.filter(c => c.id !== cardId))
+                },
+            })
+            await signalRService.connect(boardId)
+        }
 
         fetchData()
-        connectBoardHub()
-
-        connection.on(
-            "CardCreated",
-            (card: CardModel) => {
-                setCards(prev => [
-                    ...prev,
-                    card
-                ]);
-            }
-        );
-
-        connection.on(
-            "CardUpdated",
-            (updatedCard: CardModel) => {
-
-                console.log(
-                    "RECEIVED UPDATE",
-                    updatedCard
-                );
-
-                setCards(prev =>
-                    prev.map(card =>
-                        card.id === updatedCard.id
-                            ? updatedCard
-                            : card
-                    )
-                );
-            }
-        );
-
-        connection.on(
-            "CardDeleted",
-            (cardId: number) => {
-                setCards(prev =>
-                    prev.filter(
-                        c => c.id !== cardId
-                    )
-                );
-            }
-        );
+        connectSignalR()
 
         return () => {
-            connection.off(
-                "CardCreated"
-            );
-            connection.off(
-                "CardUpdated"
-            );
-            connection.off(
-                "CardDeleted"
-            );
-            connection.invoke(
-                "LeaveBoard",
-                Number(boardId)
-            );
-        };
+            signalRService.disconnect(boardId)
+        }
     }, [])
+
+    useEffect(() => {
+        if (board?.name) setDraftName(board.name)
+    }, [board?.name])
+
+    const commitRename = () => {
+        const trimmed = draftName.trim()
+        if (!board) return
+        if (trimmed && trimmed !== board.name) {
+            APIBoard.updateBoard(String(board.id), { name: trimmed })
+            setBoard(prev => prev ? { ...prev, name: trimmed } : prev)
+        } else {
+            setDraftName(board.name)
+        }
+        setIsEditingName(false)
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") commitRename()
+        if (e.key === "Escape") {
+            setDraftName(board!.name)
+            setIsEditingName(false)
+        }
+    }
 
     const handleAddCard = async (listId: number, name: string) => {
         const tempId = -Math.floor(Math.random() * 1000000)
@@ -127,46 +139,28 @@ export function BoardBackground() {
             archived: false,
             description: "",
         }
-
         setCards(prev => [...prev, tempCard])
         try {
-            await APICard.createCard(
-                name,
-                0,
-                listId,
-                ""
-            )
+            await APICard.createCard(name, cards.filter(c => c.listItemId === listId).length, listId, "")
             const cardsResponses = await Promise.all(
                 lists.map((list: ListModel) => APICard.getCardsByListId(list.id.toString()))
             )
             setCards(cardsResponses.flat())
         } catch {
-            setCards(prev =>
-                prev.filter(card => card.id !== tempId)
-            )
+            setCards(prev => prev.filter(card => card.id !== tempId))
         }
     }
 
     const handleAddList = async (name: string) => {
         const tempId = -Math.floor(Math.random() * 1000000)
-        const tempList: ListModel = {
-            id: tempId,
-            name,
-            order: lists.length
-        }
+        const tempList: ListModel = { id: tempId, name, order: lists.length }
         setLists(prev => [...prev, tempList])
         try {
-            await APIList.createList(
-                name,
-                lists.length,
-                board!.id
-            )
+            await APIList.createList(name, lists.length, board!.id)
             const listsResponse = await APIList.getListsByBoardId(board!.id.toString())
             setLists(listsResponse)
         } catch {
-            setLists(prev =>
-                prev.filter(list => list.id !== tempId)
-            )
+            setLists(prev => prev.filter(list => list.id !== tempId))
         }
     }
 
@@ -180,38 +174,149 @@ export function BoardBackground() {
         setCards(prev => prev.filter(c => c.id !== cardId))
     }
 
-    return (
-        <section className="min-h-screen relative max-h-[10vh]">
+    // Handles live cross-container shifts when hovering cards into separate lists
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event
+        if (!over || active.id === over.id) return
 
-           <div className="absolute top-25 md:top-4 left-1/2 -translate-x-1/2 z-10">
-                <div className="text-center text-white font-serif text-3xl rounded-lg border border-[#3d1a6e] hover:border-[#D896FF] transition-colors bg-transparent px-3">
-                    {board?.name}
+        const isListDrag = lists.some(l => l.id === active.id)
+        if (isListDrag) return
+
+        const activeCard = cards.find(c => c.id === active.id)
+        if (!activeCard) return
+
+        // Resolve drop targets (could be hovering directly over an empty list tracking target)
+        const isOverAList = lists.some(l => l.id === over.id)
+        const targetListId = isOverAList ? (over.id as number) : cards.find(c => c.id === over.id)?.listItemId
+
+        if (!targetListId || targetListId === activeCard.listItemId) return
+
+        setCards(prev => {
+            const rest = prev.filter(c => c.id !== active.id)
+            const targetCards = rest.filter(c => c.listItemId === targetListId).sort((a, b) => a.order - b.order)
+            
+            const overIndex = targetCards.findIndex(c => c.id === over.id)
+            let newIndex = targetCards.length
+            if (overIndex !== -1) newIndex = overIndex
+
+            const updatedCard = { ...activeCard, listItemId: targetListId }
+            targetCards.splice(newIndex, 0, updatedCard)
+
+            // Re-normalize orders for targets, components, and sources
+            const reorderedTarget = targetCards.map((c, i) => ({ ...c, order: i }))
+            const reorderedSource = rest.filter(c => c.listItemId === activeCard.listItemId)
+                                         .sort((a, b) => a.order - b.order)
+                                         .map((c, i) => ({ ...c, order: i }))
+
+            const remaining = rest.filter(c => c.listItemId !== activeCard.listItemId && c.listItemId !== targetListId)
+            return [...remaining, ...reorderedSource, ...reorderedTarget]
+        })
+    }
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event
+        if (!over) return
+
+        const isListDrag = lists.some(l => l.id === active.id)
+
+        if (isListDrag) {
+            if (active.id === over.id) return
+            const oldIndex = lists.findIndex(l => l.id === active.id)
+            const newIndex = lists.findIndex(l => l.id === over.id)
+
+            const reordered = arrayMove(lists, oldIndex, newIndex).map((list, index) => ({ ...list, order: index }))
+            setLists(reordered)
+
+            try {
+                await Promise.all(reordered.map(list => APIList.updateList(list.id.toString(), { order: list.order })))
+            } catch (err) {
+                console.error("Failed to save list order:", err)
+            }
+        } else {
+            // For card drags, container updates are finalized. Save the localized container state order.
+            const droppedCard = cards.find(c => c.id === active.id)
+            if (!droppedCard) return
+
+            const currentContainerId = droppedCard.listItemId
+            const containerCards = cards.filter(c => c.listItemId === currentContainerId).sort((a, b) => a.order - b.order)
+            
+            const oldIndex = containerCards.findIndex(c => c.id === active.id)
+            const newIndex = containerCards.findIndex(c => c.id === over.id)
+
+            let finalCards = cards
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                const reordered = arrayMove(containerCards, oldIndex, newIndex).map((c, i) => ({ ...c, order: i }))
+                finalCards = cards.map(c => reordered.find(rc => rc.id === c.id) || c)
+                setCards(finalCards)
+            }
+
+            try {
+                // Bulk patch current modifications inside destination lists
+                const targetListState = finalCards.filter(c => c.listItemId === currentContainerId)
+                await Promise.all(
+                    targetListState.map(card => 
+                        APICard.updateCard(card.id.toString(), { order: card.order, listItemId: card.listItemId })
+                    )
+                )
+            } catch (err) {
+                console.error("Failed to save card layout updates:", err)
+            }
+        }
+    }
+
+    return (
+        <section className="min-h-screen relative">
+            <div className="absolute top-20 left-1/2 w-[97%] -translate-x-1/2 z-10 flex items-center gap-3">
+                <div className="flex-1 flex items-center justify-center bg-[#2d1052] border border-[#3d1a6e] hover:border-[#D896FF] transition-colors rounded-lg">
+                    {isEditingName ? (
+                        <input
+                            ref={inputRef}
+                            value={draftName}
+                            onChange={e => setDraftName(e.target.value)}
+                            onBlur={commitRename}
+                            onKeyDown={handleKeyDown}
+                            className="flex-1 text-3xl bg-[#2d1052] text-white font-serif text-center rounded outline-1 outline-[#D896FF] focus:outline-[#D896FF] pl-5"
+                        />
+                    ) : (
+                        <span
+                            className="text-white font-serif cursor-pointer text-3xl rounded px-1 hover:bg-white/10 transition-colors"
+                            onClick={() => setIsEditingName(true)}
+                            title="Click to rename"
+                        >
+                            {draftName}
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-center bg-[#2d1052] border border-[#3d1a6e] hover:border-[#D896FF] transition-colors rounded-lg p-2 aspect-square">
+                    <button onClick={() => setSettingsOpen(true)}>
+                        <Settings className="text-white" />
+                    </button>
                 </div>
             </div>
 
-            <div className="
-                absolute
-                w-[97%] h-[90%]
-                top-[58%] md:top-1/2
-                left-1/2
-                -translate-x-1/2
-                translate-y-[-48%]
-                bg-[#2d1052]
-                border border-[#3d1a6e]
-                rounded-lg px-3 py-2.5 shadow-lg
-            ">
-                <div className="flex gap-4 h-full overflow-x-auto items-start">
-                    {lists.toSorted((a, b) => a.order - b.order).map(list => (
-                        <List
-                            key={list.id}
-                            list={list}
-                            cards={cards.filter(card => card.listItemId === list.id)}
-                            onAddCard={handleAddCard}
-                            onDeleteList={handleDeleteList}
-                            onDeleteCard={handleDeleteCard}
-                        />
-                    ))}
-                </div>
+            <div className="absolute w-[97%] h-[85%] top-1/2 left-1/2 -translate-x-1/2 translate-y-[-43%] bg-[#2d1052] border border-[#3d1a6e] rounded-lg px-3 py-4 shadow-lg">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners} // Optimized for multi-container configurations
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext items={lists.map(l => l.id)} strategy={horizontalListSortingStrategy}>
+                        <div className="flex gap-4 h-full overflow-x-auto items-start pb-4">
+                            {lists.toSorted((a,b) => a.order - b.order).map(list => (
+                                <List
+                                    key={list.id}
+                                    list={list}
+                                    cards={cards.filter(c => c.listItemId === list.id)}
+                                    onAddCard={handleAddCard}
+                                    onDeleteList={handleDeleteList}
+                                    onDeleteCard={handleDeleteCard}
+                                />
+                            ))}
+                        </div>
+                    </SortableContext>
+                </DndContext>
 
                 <button
                     className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-[#D896FF] border border-[#D896FF] rounded px-3 py-1 cursor-pointer hover:bg-[#D896FF]/20 transition-colors"
@@ -229,6 +334,18 @@ export function BoardBackground() {
                 onCancel={() => setPopupOpen(false)}
             />
 
+            {board && (
+                <BoardSettingsPopup
+                    isOpen={settingsOpen}
+                    board={board}
+                    onClose={() => setSettingsOpen(false)}
+                    onBoardDeleted={() => window.location.href = "/dashboard"}
+                    onBoardUpdated={(updated) => {
+                        setBoard(updated)
+                        setDraftName(updated.name)
+                    }}
+                />
+            )}
         </section>
     )
 }
