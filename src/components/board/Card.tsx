@@ -19,6 +19,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
     const style = { transform: CSS.Transform.toString(transform), transition }
 
     useEffect(() => {
+        if (card.id < 0) return
         setCurrentCard(card)
         const fetchMetadata = async () => {
             try {
@@ -112,7 +113,7 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
             const checklists = await APIChecklist.checklists.getChecklistsByCardId(updatedCard.id.toString())
             setChecklistCount(checklists?.length || 0)
             fetchAssignedUsers(card.id)
-            fetchLabelColor(card.id) // ← add this line
+            fetchLabelColor(card.id)
         } catch (error) {
             console.error("Failed to reload card metadata:", error)
         }
@@ -159,7 +160,10 @@ export function Card({ card, onDeleteCard }: { card: CardModel, onDeleteCard: (c
                 style={style}
                 {...attributes}
                 {...listeners}
-                onClick={() => setPopupOpen(true)}
+                onClick={() => {
+                    if (card.id < 0) return
+                    setPopupOpen(true)
+                }}
                 className="relative flex flex-col gap-2.5 bg-[#5a2c91] border border-[#7a3db8] rounded-lg p-3 shadow-sm cursor-pointer hover:border-[#D896FF] hover:shadow-md transition-all text-left w-full overflow-hidden"
             >
                 <div className="flex justify-between items-start w-full gap-2">

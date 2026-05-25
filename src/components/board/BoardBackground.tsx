@@ -30,7 +30,6 @@ export function BoardBackground() {
     const [settingsOpen, setSettingsOpen] = useState(false)
     const boardId = window.location.search.split("id=")[1]
 
-    // Activation constraint preserves normal click behaviors for opening popups
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -173,7 +172,6 @@ export function BoardBackground() {
         setCards(prev => prev.filter(c => c.id !== cardId))
     }
 
-    // Handles live cross-container shifts when hovering cards into separate lists
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event
         if (!over || active.id === over.id) return
@@ -184,7 +182,6 @@ export function BoardBackground() {
         const activeCard = cards.find(c => c.id === active.id)
         if (!activeCard) return
 
-        // Resolve drop targets (could be hovering directly over an empty list tracking target)
         const isOverAList = lists.some(l => l.id === over.id)
         const targetListId = isOverAList ? (over.id as number) : cards.find(c => c.id === over.id)?.listItemId
 
@@ -193,7 +190,7 @@ export function BoardBackground() {
         setCards(prev => {
             const rest = prev.filter(c => c.id !== active.id)
             const targetCards = rest.filter(c => c.listItemId === targetListId).sort((a, b) => a.order - b.order)
-            
+
             const overIndex = targetCards.findIndex(c => c.id === over.id)
             let newIndex = targetCards.length
             if (overIndex !== -1) newIndex = overIndex
@@ -232,13 +229,12 @@ export function BoardBackground() {
                 console.error("Failed to save list order:", err)
             }
         } else {
-            // For card drags, container updates are finalized. Save the localized container state order.
             const droppedCard = cards.find(c => c.id === active.id)
             if (!droppedCard) return
 
             const currentContainerId = droppedCard.listItemId
             const containerCards = cards.filter(c => c.listItemId === currentContainerId).sort((a, b) => a.order - b.order)
-            
+
             const oldIndex = containerCards.findIndex(c => c.id === active.id)
             const newIndex = containerCards.findIndex(c => c.id === over.id)
 
@@ -250,7 +246,6 @@ export function BoardBackground() {
             }
 
             try {
-                // Bulk patch current modifications inside destination lists
                 const targetListState = finalCards.filter(c => c.listItemId === currentContainerId)
                 await Promise.all(
                     targetListState.map(card => 
