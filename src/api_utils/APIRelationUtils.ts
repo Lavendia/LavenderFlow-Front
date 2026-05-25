@@ -168,7 +168,7 @@ export const APIRelation = {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${localStorage.getItem("authToken")}`
                 },
-                body: JSON.stringify({ workspaceId, userId, workspaceRoleId })
+                body: JSON.stringify({ workspaceId, userId, roleId: workspaceRoleId })
             })
             if (response.status === 401) {
                 localStorage.removeItem("authToken")
