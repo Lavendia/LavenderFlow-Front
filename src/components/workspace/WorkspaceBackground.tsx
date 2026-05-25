@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { APIBoard } from "@/src/api_utils/APIBoardUtils";
 import { APIWorkspace } from "@/src/api_utils/APIWorkspaceUtils";
 import type { BoardModel } from "@/src/models/BoardModels";
-import { PopupDialog } from "../PopupDialog";
+import { BoardCreationPopup } from "./BoardCreationPopup";
 import { BoardCard } from "./BoardCard";
 
 export function WorkspaceBackground() {
@@ -14,34 +14,43 @@ export function WorkspaceBackground() {
   const workspaceId = window.location.search.split("id=")[1];
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const workspace = await APIWorkspace.getWorkspaceById(workspaceId);
+        setWorkspaceName(workspace.name);
+
+        const data = await APIBoard.getBoardsByWorkspaceId(workspaceId);
+        setBoards(data);
+      } catch (error) {
+        console.error("Failed to fetch workspace data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const workspace = await APIWorkspace.getWorkspaceById(workspaceId);
-      setWorkspaceName(workspace.name);
-
-      const data = await APIBoard.getBoardsByWorkspaceId(workspaceId);
-      setBoards(data);
-    } catch (error) {
-      console.error("Failed to fetch workspace data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddBoard = async (name: string) => {
+  const handleAddBoard = async (data: {
+    name: string;
+    description: string;
+    isPublic: boolean;
+  }) => {
     const tempId = -Math.floor(Math.random() * 1000000);
-    const tempBoard: BoardModel = { id: tempId, name, description: "" };
-
+    const tempBoard: BoardModel = {
+      id: tempId,
+      name: data.name,
+      description: data.description,
+    };
     setBoards((prev) => [...prev, tempBoard]);
     setPopupOpen(false);
-
     try {
-      await APIBoard.createBoard(name, "", Number(workspaceId));
-      const data = await APIBoard.getBoardsByWorkspaceId(workspaceId);
-      setBoards(data);
+      await APIBoard.createBoard(
+        data.name,
+        data.description,
+        Number(workspaceId),
+      );
+      const boardsData = await APIBoard.getBoardsByWorkspaceId(workspaceId);
+      setBoards(boardsData);
     } catch {
       setBoards((prev) => prev.filter((b) => b.id !== tempId));
     }
@@ -49,7 +58,6 @@ export function WorkspaceBackground() {
 
   const handleDeleteBoard = async (boardId: number) => {
     setBoards((prev) => prev.filter((b) => b.id !== boardId));
-
     try {
       await APIBoard.deleteBoard(boardId.toString());
     } catch (error) {
@@ -67,27 +75,25 @@ export function WorkspaceBackground() {
 
   return (
     <section className="min-h-screen relative">
-      {/* Workspace Title */}
       <div className="absolute top-25 md:top-4 left-1/2 -translate-x-1/2 z-10">
         <div className="text-center text-white font-serif text-3xl rounded-lg border border-[#3d1a6e] hover:border-[#D896FF] transition-colors bg-transparent px-3">
           {workspaceName}
         </div>
       </div>
 
-      {/* Main Panel */}
       <div
         className="
                 absolute
                 w-[97%] h-[90%]
                 top-[58%] md:top-1/2
                 left-1/2
-                -translate-x-1/2 translate-y-[-48%]
+                -translate-x-1/2
+                translate-y-[-48%]
                 bg-[#2d1052]
                 border border-[#3d1a6e]
                 rounded-lg px-6 py-5 shadow-lg
             "
       >
-        {/* Header */}
         <div className="flex items-end justify-between mb-6">
           <p className="text-[#9b6fc7] text-sm">
             {boards.length} {boards.length === 1 ? "board" : "boards"}
@@ -100,7 +106,6 @@ export function WorkspaceBackground() {
           </button>
         </div>
 
-        {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center h-48">
             <p className="text-[#9b6fc7] text-sm">Loading boards...</p>
@@ -137,8 +142,7 @@ export function WorkspaceBackground() {
         )}
       </div>
 
-      {/* Create Board Dialog */}
-      <PopupDialog
+      <BoardCreationPopup
         isOpen={popupOpen}
         title="Create new board"
         placeholder="Enter board name..."
