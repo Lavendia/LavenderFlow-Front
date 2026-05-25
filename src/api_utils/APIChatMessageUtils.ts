@@ -1,47 +1,64 @@
-export const APICard = {
-    async getCards() {
-        const response = await fetch("/api/cards", {
+export const APIChatMessage = {
+    async getChatMessages() {
+        const response = await fetch("/api/chatmessages", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
+
         return await response.json()
     },
-    async getCardById(id: string) {
-        const response = await fetch(`/api/cards/${id}`, {
+
+    async getChatMessageById(id: string) {
+        const response = await fetch(`/api/chatmessages/${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
+
         return await response.json()
     },
-    async getCardsByListId(listId: string) {
-        const response = await fetch(`/api/cards/list/${listId}`, {
+
+    async getChatMessagesByCardId(cardId: string) {
+        const response = await fetch(`/api/chatmessages/card/${cardId}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
+
         return await response.json()
     },
-    async createCard(name: string, order: number, listItemId: number, description: string, deadline?: string) {
-        const response = await fetch("/api/cards", {
+
+    async createChatMessage(text: string, cardId: number, userId: number) {
+        const response = await fetch("/api/chatmessages", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             },
-            body: JSON.stringify({ name, order, description, deadline, listItemId })
+            body: JSON.stringify({
+                text,
+                cardId,
+                userId
+            })
         })
+
         return await response.json()
     },
-    async updateCard(id: string, data: { name?: string, order?: number, archived?: boolean, listItemId?: number, description?: string | null, deadline?: string | null }) {
-        const response = await fetch(`/api/cards/${id}`, {
+
+    async updateChatMessage(
+        id: string,
+        data: {
+            text?: string
+        }
+    ) {
+        const response = await fetch(`/api/chatmessages/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -49,16 +66,17 @@ export const APICard = {
             },
             body: JSON.stringify(data)
         })
+
         return await response.json()
     },
-    async deleteCard(id: string) {
-        const response = await fetch(`/api/cards/${id}`, {
+
+    async deleteChatMessage(id: string) {
+        await fetch(`/api/chatmessages/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             }
         })
-        return
     }
 }

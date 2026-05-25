@@ -55,7 +55,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         },
         async updateUserBoardRole(boardId: string, userId: string, boardRoleId: number) {
             const response = await fetch(`/api/boardusers?boardId=${boardId}&userId=${userId}`, {
@@ -75,7 +75,7 @@ export const APIRelation = {
     },
     cards: {
         async getCardAssignees(cardId: string) {
-            const response = await fetch(`/api/cardassigments/card/${cardId}`, {
+            const response = await fetch(`/api/cardassignments/card/${cardId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -89,7 +89,7 @@ export const APIRelation = {
             return await response.json()
         },
         async addAssigneeToCard(cardId: number, userId: number) {
-            const response = await fetch(`/api/cardassigments`, {
+            const response = await fetch(`/api/cardassignments`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export const APIRelation = {
             return await response.json()
         },
         async removeAssigneeFromCard(cardId: string, userId: string) {
-            const response = await fetch(`/api/cardassigments?cardId=${cardId}&userId=${userId}`, {
+            const response = await fetch(`/api/cardassignments?cardId=${cardId}&userId=${userId}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -115,7 +115,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         }
     },
     workspaces: {
@@ -188,7 +188,7 @@ export const APIRelation = {
                 localStorage.removeItem("authToken")
                 window.location.replace("/login")
             }
-            return await response.json()
+            return
         },
         async updateUserWorkspaceRole(workspaceUserId: string, workspaceRoleId: number) {
             const response = await fetch(`/api/workspaceusers/${workspaceUserId}`, {
@@ -204,6 +204,79 @@ export const APIRelation = {
                 window.location.replace("/login")
             }
             return await response.json()
+        }
+    },
+    labels: {
+        async getAllCardLabels() {
+            const response = await fetch(`/api/cardlabels`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getLabelsByCardId(cardId: string) {
+            const response = await fetch(`/api/cardlabels/card/${cardId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async getCardsByLabelId(labelId: string) {
+            const response = await fetch(`/api/cardlabels/label/${labelId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async addLabelToCard(cardId: number, labelId: number) {
+            const response = await fetch(`/api/cardlabels`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                },
+                body: JSON.stringify({ cardId, labelId })
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return await response.json()
+        },
+        async removeLabelFromCard(cardId: string, labelId: string) {
+            const response = await fetch(`/api/cardlabels/card/${cardId}/label/${labelId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                }
+            })
+            if (response.status === 401) {
+                localStorage.removeItem("authToken")
+                window.location.replace("/login")
+            }
+            return
         }
     }
 }

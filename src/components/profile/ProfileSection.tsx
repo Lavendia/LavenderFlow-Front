@@ -1,12 +1,7 @@
 import { APIUser } from "@/src/api_utils/APIUserUtils"
+import type { UserModel } from "@/src/models/BoardModels"
 import { User } from "lucide-react"
 import { useEffect, useState } from "react"
-
-interface UserProfile {
-  id: string
-  name: string
-  email: string
-}
 
 interface FormState {
   name: string
@@ -48,7 +43,7 @@ function InputField({
 }
 
 export function ProfileSection() {
-  const [user, setUser] = useState<UserProfile | null>(null)
+  const [user, setUser] = useState<UserModel | null>(null)
   const [form, setForm] = useState<FormState>({ name: "", email: "", password: "", confirmPassword: "" })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -90,18 +85,18 @@ export function ProfileSection() {
     setSuccess(false)
 
     try {
-      const payload: { name?: string; email?: string; password?: string } = {}
-      if (form.name !== user.name) payload.name = form.name
-      if (form.email !== user.email) payload.email = form.email
-      if (form.password) payload.password = form.password
+      const data: { name?: string; email?: string; password?: string } = {}
+      if (form.name !== user.name) data.name = form.name
+      if (form.email !== user.email) data.email = form.email
+      if (form.password) data.password = form.password
 
-      if (Object.keys(payload).length === 0) {
+      if (Object.keys(data).length === 0) {
         setError("No changes to save.")
         setSaving(false)
         return
       }
 
-      await APIUser.updateProfile(user.id, payload)
+      await APIUser.updateProfile(user.id.toString(), data)
       setUser((u) => u ? { ...u, name: form.name, email: form.email } : u)
       setForm((f) => ({ ...f, password: "", confirmPassword: "" }))
       setSuccess(true)

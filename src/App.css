@@ -1,3 +1,18 @@
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-out {
+  animation: fadeOut 2s ease-out forwards;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
