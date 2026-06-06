@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AuthLayout from './pages/AuthLayout'
 import { HomePage } from "./pages/HomePage"
 import { ProfilePage } from './pages/ProfilePage'
