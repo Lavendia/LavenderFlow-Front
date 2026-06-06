@@ -52,7 +52,7 @@ export const APICard = {
         return await response.json()
     },
     async deleteCard(id: string) {
-        const response = await fetch(`/api/cards/${id}`, {
+        await fetch(`/api/cards/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

@@ -17,7 +17,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://api:5000',
+        changeOrigin: true,
+      },
+      '/lavenderFlowHub': {
+        target: 'http://api:5000',
         changeOrigin: true,
       },
     },

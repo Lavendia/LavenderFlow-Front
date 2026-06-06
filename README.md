@@ -1,9 +1,170 @@
 # LavenderFlow - Frontend
 
-Un gestionnaire de tâches collaboratif moderne en temps réel, inspiré par Trello. Créez, organisez et gérez vos projets en équipe avec synchronisation instantanée.
+Un **gestionnaire de tâches collaboratif moderne en temps réel**, inspiré par Trello. Créez, organisez et gérez vos projets en équipe avec synchronisation instantanée.
 
-## Fonctionnalités
+## Présentation du Service Frontend
 
+### Objectifs du Service Frontend
+- Fournir une interface utilisateur moderne, intuitive et réactive
+- Synchroniser les données en temps réel avec le backend via WebSocket
+- Gérer l'authentification et les sessions utilisateur
+- Offrir une expérience de drag & drop fluide et responsable
+- Optimiser les performances avec React et Vite
+
+### Fonctionnalités Principales
+- **Interface collaborative** en temps réel
+- **Drag & drop intuitif** pour listes et cartes
+- **Système d'étiquettes** avec codes couleur
+- **Assignations** et **checklists**
+- **Commentaires** en temps réel
+- **Authentification** sécurisée (JWT)
+- **Synchronisation instantanée** de tous les événements
+
+## Table des matières
+
+- [Présentation du service](#-présentation-du-service-frontend)
+- [Fonctionnalités](#fonctionnalités)
+- [Architecture](#architecture)
+- [Prérequis](#prérequis)
+- [Installation et lancement](#installation-et-lancement)
+- [Stack technologique](#stack-technologique)
+- [Structure du projet](#structure-du-projet)
+- [Communication avec le backend](#communication-avec-le-backend)
+- [Notes de sécurité](#notes-de-sécurité)
+- [Troubleshooting](#troubleshooting)
+---
+
+## Architecture
+
+### Vue d'ensemble
+
+Le frontend LavenderFlow suit une **architecture modulaire** basée sur des composants React réutilisables:
+
+```
+┌──────────────────────────────────────────┐
+│     Pages (Routes React)                 │
+│  - Index/Home                            │
+│  - Auth (Login/Register)                 │
+│  - Workspaces                            │
+│  - Board View                            │
+└────────────────┬─────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────┐
+│     Composants React (UI)                │
+│  - Tableau kanban                        │
+│  - Cartes et listes                      │
+│  - Modales et formulaires                │
+│  - Navigation                            │
+└────────────────┬─────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────┐
+│     Services (Logique)                   │
+│  - SignalR Connection                    │
+│  - API Client                            │
+│  - State Management (Hooks)              │
+│  - Authentification                      │
+└────────────────┬─────────────────────────┘
+                 │
+┌────────────────▼──────────────────────────┐
+│     Backend API                           │
+│  - REST endpoints                         │
+│  - WebSocket (SignalR)                    │
+└──────────────────────────────────────────┘
+```
+
+### Couches Architecturales
+
+#### **Pages**
+Routes principales de l'application:
+- `LoginPage` - Authentification utilisateur
+- `RegisterPage` - Création de compte
+- `WorkspacesPage` - Liste des workspaces
+- `BoardPage` - Vue principale du tableau kanban
+- `ProfilePage` - Gestion du profil utilisateur
+
+#### **Composants**
+Composants React réutilisables organisés par feature:
+- **Components/Auth** - Formulaires d'authentification
+- **Components/Board** - Tableau, listes, cartes
+- **Components/UI** - Composants génériques (boutons, modales, etc.)
+- **Components/Profile** - Gestion du profil
+
+#### **Services**
+Logique métier et communication:
+- **SignalR Service** - Gestion WebSocket temps réel
+- **API Client** - Appels HTTP au backend
+- **Auth Service** - Gestion de l'authentification
+- **State Hooks** - Gestion d'état locale
+
+#### **Models**
+Types TypeScript et interfaces:
+- `User`, `Workspace`, `Board`, `Card`
+- `ListItem`, `Label`, `Assignment`, etc.
+
+### Flux de Données
+
+**Cycle de vie: Création d'une carte**
+
+```
+1. Utilisateur remplit le formulaire
+   ↓
+2. Événement onClick → appel API
+   └─> POST /api/lists/{listId}/cards
+       Headers: { Authorization: Bearer <token> }
+   ↓
+3. Frontend reçoit la réponse avec la nouvelle carte
+   ↓
+4. Backend émet via SignalR: "CardCreated"
+   ↓
+5. Service SignalR reçoit l'événement
+   ↓
+6. React Hook met à jour le state local
+   ↓
+7. Composant se re-render avec la nouvelle carte
+   ↓
+8. UI affiche la carte sans rechargement
+```
+
+### Gestion de l'État
+
+React Hooks utilisés pour la gestion d'état:
+
+```typescript
+// État local du composant
+const [cards, setCards] = useState<Card[]>([]);
+const [loading, setLoading] = useState(false);
+
+// Effets (appels API, subscriptions)
+useEffect(() => {
+  fetchCards();
+  subscribeToCardEvents();
+}, [boardId]);
+
+// Context API pour état global (auth, user)
+const { user, token } = useAuth();
+```
+
+### Intégration SignalR (Temps Réel)
+
+```typescript
+// 1. Établir la connexion
+const connection = new HubConnectionBuilder()
+  .withUrl("http://localhost:5000/lavenderFlowHub", {
+    accessTokenFactory: () => getToken()
+  })
+  .withAutomaticReconnect()
+  .build();
+
+// 2. S'abonner aux événements
+connection.on("CardCreated", (card) => {
+  setCards([...cards, card]);
+});
+
+// 3. Envoyer des messages (si nécessaire)
+await connection.invoke("JoinWorkspace", workspaceId);
+```
+
+---
 ### Gestion des Tableaux
 - **Création et édition** de tableaux collaboratifs
 - **Gestion des membres** avec attribution de rôles
@@ -138,6 +299,49 @@ src/
 - Le token JWT est stocké dans `localStorage` sous la clé `authToken`
 - Les appels API incluent automatiquement le Bearer token
 - Les redirections vers `/login` se font sur erreur 401
+
+---
+
+## Communication avec le Backend
+
+### Requêtes HTTP
+
+Toutes les requêtes HTTP incluent automatiquement le token JWT:
+
+```typescript
+// Exemple d'appel API
+const response = await fetch("http://localhost:5000/api/cards", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+  },
+  body: JSON.stringify({ name: "Nouvelle tâche", listItemId: 1 })
+});
+```
+
+### Événements SignalR (Temps Réel)
+
+Le frontend s'abonne à ces événements:
+
+```
+- BoardCreated / BoardUpdated / BoardDeleted
+- CardCreated / CardUpdated / CardDeleted
+- LabelAddedToCard / LabelRemovedFromCard
+- UserAssignedToCard / UserUnassignedFromCard
+- ChecklistItemUpdated
+- ChatMessageAdded
+- ... et autres
+```
+
+### Gestion des Erreurs
+
+- **401 Unauthorized** → Redirection vers `/login`
+- **403 Forbidden** → Affichage d'une erreur d'accès
+- **404 Not Found** → Gestion gracieuse avec message utilisateur
+- **500 Server Error** → Log de l'erreur + message à l'utilisateur
+
+---
 
 ## Troubleshooting
 
