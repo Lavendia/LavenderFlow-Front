@@ -7,7 +7,7 @@ on:
     branches: [ $default-branch ]
 
 jobs:
-  verify:
+  verify(Node):
     runs-on: ubuntu-latest
 
     strategy:
@@ -25,7 +25,7 @@ jobs:
     - run: npm run build --if-present
     - run: npm test
 
-  build:
+  build(Node):
 
     runs-on: ubuntu-latest
 
